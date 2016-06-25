@@ -1,0 +1,7 @@
+dsrt
+dsrt.exe
+*.o
+*.d
+*.cmd
+*.gch
+tags
