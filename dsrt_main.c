@@ -19,6 +19,57 @@ Description:
 /* Module */
 #include "dsrt_main.h"
 
+/* Context */
+struct dsrt_main;
+
+struct dsrt_display;
+
+struct dsrt_opts;
+
+struct dsrt_ctxt
+{
+    struct dsrt_main * p_main;
+
+    struct dsrt_display * p_display;
+
+    struct dsrt_opts * p_opts;
+
+}; /* struct dsrt_ctxt */
+
+struct dsrt_display
+{
+    Display * dis;
+
+    Visual * vis;
+
+    Window root;
+
+    int screen;
+
+    int depth;
+
+    GC copyGC;
+
+};
+
+struct dsrt_opts
+{
+    char b_shadow;
+
+    char b_center;
+
+};
+
+struct dsrt_main
+{
+    struct dsrt_ctxt o_ctxt;
+
+    struct dsrt_display o_display;
+
+    struct dsrt_opts o_opts;
+
+};
+
 void XDestroyImage(XImage* p_image);
 
 #if defined(DSRT_FEATURE_MSB)
@@ -60,7 +111,6 @@ struct dsrt_jpeg
     int width;
     int height;
     int bytesPerPix;
-    int depth;
     unsigned long int red_mask;
     unsigned long int green_mask;
     unsigned long int blue_mask;
@@ -71,11 +121,10 @@ struct dsrt_jpeg
 
 static
 char
-dsrt_jpeg_decoder_init(
+dsrt_jpeg_init(
+    struct dsrt_ctxt const * const p_ctxt,
     struct dsrt_jpeg * const p_dec,
-    char const * const filename,
-    Display * const dis,
-    int const screen)
+    char const * const filename)
 {
     char b_result;
 
@@ -112,16 +161,12 @@ dsrt_jpeg_decoder_init(
                 (p_dec->width * p_dec->bytesPerPix),
                 1);
 
-        p_dec->depth = DefaultDepth (dis, screen);
-
         {
-            Visual * const vis = DefaultVisual (dis, screen);
+            p_dec->red_mask = p_ctxt->p_display->vis->red_mask;
 
-            p_dec->red_mask = vis->red_mask;
+            p_dec->green_mask = p_ctxt->p_display->vis->green_mask;
 
-            p_dec->green_mask = vis->green_mask;
-
-            p_dec->blue_mask = vis->blue_mask;
+            p_dec->blue_mask = p_ctxt->p_display->vis->blue_mask;
         }
 
         p_dec->rRatio = p_dec->red_mask / 255.0;
@@ -139,11 +184,11 @@ dsrt_jpeg_decoder_init(
 
     return b_result;
 
-} /* dsrt_jpeg_decoder_init() */
+} /* dsrt_jpeg_init() */
 
 static
 void
-dsrt_jpeg_decoder_cleanup(
+dsrt_jpeg_cleanup(
     struct dsrt_jpeg * const p_dec)
 {
     jpeg_finish_decompress (&p_dec->cinfo);
@@ -154,16 +199,89 @@ dsrt_jpeg_decoder_cleanup(
 
 }
 
-static
-void *
-dsrt_jpeg_decoder_scan(
-    struct dsrt_jpeg * const p_dec)
+struct dsrt_img
 {
-    size_t const numNewBufBytes = (((p_dec->depth + 15) / 8) * (p_dec->width * p_dec->height));
+    Drawable pixmap;
 
-    void * const imgBuf = malloc(numNewBufBytes);
+    int width;
 
-    if (imgBuf)
+    int height;
+
+};
+
+static
+XImage *
+dsrt_ximage_create(
+    struct dsrt_ctxt const * const p_ctxt,
+    int const width)
+{
+    XImage * img;
+
+    size_t const i_len = ((((p_ctxt->p_display->depth + 15) & ~15) / 8) * (width * 1));
+
+    void * const p_data = malloc(i_len);
+
+    if (p_data)
+    {
+        img = XCreateImage(
+            p_ctxt->p_display->dis,
+            CopyFromParent,
+            p_ctxt->p_display->depth,
+            ZPixmap,
+            0,
+            p_data,
+            width,
+            1,
+            ((p_ctxt->p_display->depth + 15) & ~15),
+            0);
+
+        if (img)
+        {
+            XInitImage (img);
+
+            /*Set the client's byte order, so that XPutImage knows what to do with the data.*/
+            /*The default in a new X image is the server's format, which may not be what we want.*/
+#if defined(DSRT_FEATURE_MSB)
+
+            if ((LSBFirst == get_byte_order ()))
+            {
+                img->byte_order = LSBFirst;
+            }
+            else
+            {
+                img->byte_order = MSBFirst;
+            }
+#else /* #if defined(DSRT_FEATURE_MSB) */
+
+            img->byte_order = LSBFirst;
+
+#endif /* #if defined(DSRT_FEATURE_MSB) */
+
+            /*The bitmap_bit_order doesn't matter with ZPixmap images.*/
+            img->bitmap_bit_order = MSBFirst;
+        }
+    }
+    else
+    {
+        img = NULL;
+    }
+
+    return img;
+
+}
+
+static
+char
+dsrt_jpeg_scan(
+    struct dsrt_ctxt const * const p_ctxt,
+    struct dsrt_jpeg * const p_dec,
+    struct dsrt_img * const p_img)
+{
+    char b_result;
+
+    XImage * const img = dsrt_ximage_create(p_ctxt, p_dec->width);
+
+    if (img)
     {
         if ((3 == p_dec->bytesPerPix) ||
             (1 == p_dec->bytesPerPix))
@@ -173,14 +291,14 @@ dsrt_jpeg_decoder_scan(
             int const xb0 = 2 % p_dec->bytesPerPix;
             int const lineOffset = (p_dec->width * p_dec->bytesPerPix);
             unsigned int y;
-            u_int32_t * newBuf32 = imgBuf;
-            u_int16_t * newBuf16 = imgBuf;
 
             for (y = 0; y < p_dec->cinfo.output_height; ++y)
             {
                 int xr;
                 int xg;
                 int xb;
+                u_int32_t * newBuf32 = (u_int32_t *)(img->data);
+                u_int16_t * newBuf16 = (u_int16_t *)(img->data);
 
                 jpeg_read_scanlines (&p_dec->cinfo, p_dec->lineBuf, 1);
 
@@ -192,7 +310,7 @@ dsrt_jpeg_decoder_scan(
                             ((u_int32_t)(p_dec->lineBuf[0][xg] * p_dec->gRatio) & p_dec->green_mask) |
                             ((u_int32_t)(p_dec->lineBuf[0][xb] * p_dec->bRatio) & p_dec->blue_mask));
 
-                    if (p_dec->depth > 16)
+                    if (p_ctxt->p_display->depth > 16)
                     {
                         *newBuf32 = col;
                         ++newBuf32;
@@ -203,7 +321,22 @@ dsrt_jpeg_decoder_scan(
                         ++newBuf16;
                     }
                 }
+
+                /* put */
+                XPutImage(
+                    p_ctxt->p_display->dis,
+                    p_img->pixmap,
+                    p_ctxt->p_display->copyGC,
+                    img,
+                    0,
+                    0,
+                    0,
+                    y,
+                    p_img->width,
+                    1);
             }
+
+            b_result = 1;
         }
         else
         {
@@ -211,8 +344,10 @@ dsrt_jpeg_decoder_scan(
             fprintf (stderr, "Error: the number of color channels is %d.  This program only handles 1 or 3\n", p_dec->bytesPerPix);
 #endif /* #if defined(DSRT_FEATURE_LOG) */
 
-            return NULL;
+            b_result = 0;
         }
+
+        XDestroyImage(img);
     }
     else
     {
@@ -220,149 +355,138 @@ dsrt_jpeg_decoder_scan(
         fprintf(stderr, "error out of memory\n");
 #endif /* #if defined(DSRT_FEATURE_LOG) */
 
-        return NULL;
+        b_result = 0;
     }
 
-    return imgBuf;
+    return b_result;
 }
 
 /*This returns an array for a 24 bit image.*/
 static
-XImage *
+char
 dsrt_main_create_image (
-    Display * dis,
-    int screen,
+    struct dsrt_ctxt const * const p_ctxt,
     char const *filename,
-    int *widthPtr,
-    int *heightPtr)
+    struct dsrt_img * const p_img)
 {
-    XImage * img = NULL;
+    char b_result;
 
     struct dsrt_jpeg o_dec;
 
-    if (dsrt_jpeg_decoder_init(&o_dec, filename, dis, screen))
+    if (dsrt_jpeg_init(p_ctxt, &o_dec, filename))
     {
-        void * const imgBuf = dsrt_jpeg_decoder_scan(&o_dec);
+        p_img->width = o_dec.width;
 
-        if (imgBuf)
-        {
-            img = XCreateImage(
-                dis,
-                CopyFromParent,
-                o_dec.depth,
-                ZPixmap,
-                0,
-                imgBuf,
-                o_dec.width, o_dec.height,
-                ((o_dec.depth + 15) & ~15),
-                0);
+        p_img->height = o_dec.height;
 
-            XInitImage (img);
+        p_img->pixmap = XCreatePixmap(
+            p_ctxt->p_display->dis,
+            p_ctxt->p_display->root,
+            o_dec.width,
+            o_dec.height,
+            p_ctxt->p_display->depth);
 
-            /*Set the client's byte order, so that XPutImage knows what to do with the data.*/
-            /*The default in a new X image is the server's format, which may not be what we want.*/
-#if defined(DSRT_FEATURE_MSB)
+        b_result = dsrt_jpeg_scan(p_ctxt, &o_dec, p_img);
 
-            if ((LSBFirst == get_byte_order ())) {
-                img->byte_order = LSBFirst;
-            } else {
-                img->byte_order = MSBFirst;
-            }
-#else /* #if defined(DSRT_FEATURE_MSB) */
-
-            img->byte_order = LSBFirst;
-
-#endif /* #if defined(DSRT_FEATURE_MSB) */
-
-            /*The bitmap_bit_order doesn't matter with ZPixmap images.*/
-            img->bitmap_bit_order = MSBFirst;
-
-            dsrt_jpeg_decoder_cleanup(&o_dec);
-
-            *widthPtr = o_dec.width;
-
-            *heightPtr = o_dec.height;
-
-            return img;
-        }
-        else
-        {
-#if defined(DSRT_FEATURE_LOG)
-            fprintf(stderr, "error\n");
-#endif /* #if defined(DSRT_FEATURE_LOG) */
-            return NULL;
-        }
+        dsrt_jpeg_cleanup(&o_dec);
     }
     else
     {
 #if defined(DSRT_FEATURE_LOG)
         fprintf(stderr, "error\n");
 #endif /* #if defined(DSRT_FEATURE_LOG) */
-        return NULL;
+
+        b_result = 0;
     }
+
+    return b_result;
 
 }
 
 static
 int
 dsrt_main_show_file(
+    struct dsrt_ctxt const * const p_ctxt,
     char const * const p_file_name)
 {
     int i_result;
-    int imageWidth;
-    int imageHeight;
 
-    Display * const dis = XOpenDisplay(NULL);
-    if (dis)
+    struct dsrt_img o_img;
+
+    if (dsrt_main_create_image (p_ctxt, p_file_name, &o_img))
     {
-        int const screen = DefaultScreen (dis);
-        Window const root = DefaultRootWindow(dis);
-        XImage * const img = dsrt_main_create_image (dis, screen, p_file_name, &imageWidth, &imageHeight);
-        if (img)
+        Drawable pixmap;
+
+#if 0 /* defined(DSRT_FEATURE_CENTER) */
+        /* Todo: command line options for -fit or -tile */
+        /* Todo: default background color for -fit */
         {
-            GC copyGC;
-            Drawable pixmap;
-            copyGC = XCreateGC (dis, root, 0, NULL);
-#if defined(DSRT_FEATURE_CENTER)
-            /* Todo: command line options for -fit or -tile */
-            /* Todo: default background color for -fit */
-            {
-                int sw = DisplayWidth(dis, screen);
-                int sh = DisplayHeight(dis, screen);
-                int const x = ((sw-imageWidth)/2);
-                int const y = ((sh-imageHeight)/2);
-                pixmap = XCreatePixmap(dis, root, sw, sh, DefaultDepth(dis, screen));
-                XPutImage (dis, pixmap, copyGC, img, 0, 0, x, y, imageWidth, imageHeight);
-            }
+            int sw = DisplayWidth(p_ctxt->p_display->dis, p_ctxt->p_display->screen);
+            int sh = DisplayHeight(p_ctxt->p_display->dis, p_ctxt->p_display->screen);
+            int const x = ((sw-o_img.width)/2);
+            int const y = ((sh-o_img.height)/2);
+            pixmap = XCreatePixmap(p_ctxt->p_display->dis, p_ctxt->p_display->root, sw, sh, p_ctxt->p_display->depth);
+            XPutImage (p_ctxt->p_display->dis, pixmap, p_ctxt->p_display->copyGC, o_img.img, 0, 0, x, y, o_img.width, o_img.height);
+        }
 #else /* #if defined(DSRT_FEATURE_CENTER) */
-            pixmap = XCreatePixmap(dis, root, imageWidth, imageHeight, DefaultDepth(dis, screen));
-            XPutImage (dis, pixmap, copyGC, img, 0, 0, 0, 0, imageWidth, imageHeight);
+        pixmap = o_img.pixmap;
 #endif /* #if defined(DSRT_FEATURE_CENTER) */
 
-            XDestroyImage(img);
-            XSetWindowBackgroundPixmap(dis, root, pixmap);
-            XClearWindow(dis, root);
-            XFlush(dis);
-            i_result = 0;
-        }
-        else
-        {
-#if defined(DSRT_FEATURE_LOG)
-            fprintf(stderr, "unable to create X image\n");
-#endif /* #if defined(DSRT_FEATURE_LOG) */
-            i_result = 1;
-        }
+        XSetWindowBackgroundPixmap(p_ctxt->p_display->dis, p_ctxt->p_display->root, pixmap);
+        XClearWindow(p_ctxt->p_display->dis, p_ctxt->p_display->root);
+        XFlush(p_ctxt->p_display->dis);
+        i_result = 0;
     }
     else
     {
 #if defined(DSRT_FEATURE_LOG)
-        fprintf(stderr, "unable to open X display\n");
+        fprintf(stderr, "unable to create X image\n");
 #endif /* #if defined(DSRT_FEATURE_LOG) */
+
         i_result = 1;
     }
 
     return i_result;
 }
+
+/*
+
+Function: dsrt_display_init
+
+Description:
+
+    Initialize dsrt_display module.
+
+*/
+static
+char
+dsrt_display_init(
+    struct dsrt_ctxt const * const p_ctxt)
+{
+    struct dsrt_display * const p_display = p_ctxt->p_display;
+
+    p_display->dis = XOpenDisplay(NULL);
+
+    if (p_display->dis)
+    {
+        p_display->root = DefaultRootWindow(p_display->dis);
+
+        p_display->screen = DefaultScreen(p_display->dis);
+
+        p_display->depth = DefaultDepth(p_display->dis, p_display->screen);
+
+        p_display->vis = DefaultVisual(p_display->dis, p_display->screen);
+
+        p_display->copyGC = XCreateGC(p_display->dis, p_display->root, 0, NULL);
+
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+
+} /* dsrt_display_init() */
 
 /*
 
@@ -380,14 +504,32 @@ dsrt_main(
 {
     int i_result;
 
-    if (2 <= argc)
+    struct dsrt_main o_main;
+
+    o_main.o_ctxt.p_main = &o_main;
+
+    o_main.o_ctxt.p_display = &o_main.o_display;
+
+    o_main.o_ctxt.p_opts = &o_main.o_opts;
+
+    if (dsrt_display_init(&o_main.o_ctxt))
     {
-        i_result = dsrt_main_show_file(argv[1]);
+        if (2 <= argc)
+        {
+            i_result = dsrt_main_show_file(&o_main.o_ctxt, argv[1]);
+        }
+        else
+        {
+#if defined(DSRT_FEATURE_LOG)
+            fprintf (stderr, "please specify a filename\n");
+#endif /* #if defined(DSRT_FEATURE_LOG) */
+            i_result = 1;
+        }
     }
     else
     {
 #if defined(DSRT_FEATURE_LOG)
-        fprintf (stderr, "please specify a filename\n");
+        fprintf(stderr, "unable to open X display\n");
 #endif /* #if defined(DSRT_FEATURE_LOG) */
         i_result = 1;
     }
