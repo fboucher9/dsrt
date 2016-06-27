@@ -2,9 +2,9 @@
 
 # dsrt - /DeSseRT/ - DiSplay jpg on RooT
 
-DSRT_CFLAGS = $(CFLAGS) -ansi -pedantic -Wall -Wextra -g -I$(DSRT_DST_PATH)
+DSRT_CFLAGS = $(CFLAGS) -ansi -pedantic -Wall -Wextra -Os -I$(DSRT_DST_PATH)
 
-DSRT_LDFLAGS = $(LDFLAGS) -lX11 -ljpeg -lm
+DSRT_LDFLAGS = $(LDFLAGS) -s -lX11 -ljpeg -lm
 
 DSRT_SRCS = \
     $(DSRT_DST_PATH)/_obj_dsrt_main.o \
