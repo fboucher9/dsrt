@@ -16,37 +16,14 @@ Description:
 /* Configuration */
 #include "dsrt_cfg.h"
 
+/* Context */
+#include "dsrt_ctxt.h"
+
+/* Options */
+#include "dsrt_opts.h"
+
 /* Module */
 #include "dsrt_main.h"
-
-/* Context */
-struct dsrt_main;
-
-struct dsrt_display;
-
-struct dsrt_opts;
-
-struct dsrt_jpeg;
-
-struct dsrt_image;
-
-struct dsrt_pixmap;
-
-struct dsrt_ctxt
-{
-    struct dsrt_main * p_main;
-
-    struct dsrt_display * p_display;
-
-    struct dsrt_opts * p_opts;
-
-    struct dsrt_jpeg * p_jpeg;
-
-    struct dsrt_image * p_image;
-
-    struct dsrt_pixmap * p_pixmap;
-
-}; /* struct dsrt_ctxt */
 
 struct dsrt_display
 {
@@ -75,16 +52,6 @@ struct dsrt_display
     int depth;
 
 }; /* struct dsrt_display */
-
-struct dsrt_opts
-{
-    char const * p_filename;
-
-    char b_shadow;
-
-    char b_center;
-
-}; /* struct dsrt_opts */
 
 /*
 
@@ -455,11 +422,16 @@ dsrt_main_write_line(
 {
     struct dsrt_jpeg const * const p_jpeg = p_ctxt->p_jpeg;
 
-    int x_offset = 0;
+    struct dsrt_opts const * const p_opts = p_ctxt->p_opts;
 
-    int y_offset = 0;
+    int x_offset;
+
+    int y_offset;
+
+    (void)(p_opts);
 
 #if defined(DSRT_FEATURE_CENTER)
+    if (p_opts->b_center)
     {
         /* Todo: command line options for -fit or -tile */
         /* Todo: default background color for -fit */
@@ -471,7 +443,13 @@ dsrt_main_write_line(
 
         y_offset = ((sh - p_jpeg->height) / 2);
     }
+    else
 #endif /* #if defined(DSRT_FEATURE_CENTER) */
+    {
+        x_offset = 0;
+
+        y_offset = 0;
+    }
 
     /* put */
     XPutImage(
@@ -535,11 +513,19 @@ dsrt_pixmap_init(
 
     struct dsrt_pixmap * const p_pixmap = p_ctxt->p_pixmap;
 
-#if defined(DSRT_FEATURE_CENTER)
-    p_pixmap->width = DisplayWidth(p_ctxt->p_display->dis, p_ctxt->p_display->screen);
+    struct dsrt_opts const * const p_opts = p_ctxt->p_opts;
 
-    p_pixmap->height = DisplayHeight(p_ctxt->p_display->dis, p_ctxt->p_display->screen);
-#else
+    (void)(p_opts);
+
+#if defined(DSRT_FEATURE_CENTER)
+    if (p_opts->b_center)
+    {
+        p_pixmap->width = DisplayWidth(p_ctxt->p_display->dis, p_ctxt->p_display->screen);
+
+        p_pixmap->height = DisplayHeight(p_ctxt->p_display->dis, p_ctxt->p_display->screen);
+    }
+    else
+#endif /* #if defined(DSRT_FEATURE_CENTER) */
     {
         struct dsrt_jpeg const * const p_jpeg = p_ctxt->p_jpeg;
 
@@ -547,7 +533,6 @@ dsrt_pixmap_init(
 
         p_pixmap->height = p_jpeg->height;
     }
-#endif /* #if defined(DSRT_FEATURE_CENTER) */
 
     p_pixmap->pixmap = XCreatePixmap(
         p_ctxt->p_display->dis,
@@ -785,46 +770,6 @@ dsrt_main_init_ctxt(
     p_ctxt->p_pixmap = &p_main->o_pixmap;
 
 } /* dsrt_main_init_ctxt() */
-
-static
-char
-dsrt_opts_init(
-    struct dsrt_ctxt const * const p_ctxt,
-    int const argc,
-    char const * const * const argv)
-{
-    char b_result;
-
-    struct dsrt_opts * const p_opts = p_ctxt->p_opts;
-
-    if (2 <= argc)
-    {
-        p_opts->p_filename = argv[1];
-
-        b_result = 1;
-    }
-    else
-    {
-#if defined(DSRT_FEATURE_LOG)
-        fprintf (stderr, "please specify a filename\n");
-#endif /* #if defined(DSRT_FEATURE_LOG) */
-
-        b_result = 0;
-    }
-
-    return b_result;
-
-} /* dsrt_opts_init() */
-
-static
-void
-dsrt_opts_cleanup(
-    struct dsrt_ctxt const * const p_ctxt)
-{
-    /* Unused parameter */
-    (void)(p_ctxt);
-
-} /* dsrt_opts_cleanup() */
 
 /*
 

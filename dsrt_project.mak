@@ -8,6 +8,7 @@ DSRT_LDFLAGS = $(LDFLAGS) -s -lX11 -ljpeg -lm
 
 DSRT_SRCS = \
     $(DSRT_DST_PATH)/_obj_dsrt_main.o \
+    $(DSRT_DST_PATH)/_obj_dsrt_opts.o \
     $(DSRT_DST_PATH)/_obj_dsrt_os.o
 
 .PHONY: all clean

@@ -21,6 +21,9 @@ Comments:
 /* exit() and EXIT_ codes */
 #include <stdlib.h>
 
+/* strcmp() */
+#include <string.h>
+
 /* Xlib */
 #include <X11/Xlib.h>
 
