@@ -11,11 +11,23 @@ struct dsrt_opts
 {
     char const * p_filename;
 
+#if defined(DSRT_FEATURE_EMBED)
+    unsigned long int i_embed;
+#endif /* #if defined(DSRT_FEATURE_EMBED) */
+
     /* char b_shadow; */
 
 #if defined(DSRT_FEATURE_CENTER)
     char b_center;
 #endif /* #if defined(DSRT_FEATURE_CENTER) */
+
+#if defined(DSRT_FEATURE_PREVIEW)
+    char b_preview;
+#endif /* #if defined(DSRT_FEATURE_PREVIEW) */
+
+#if defined(DSRT_FEATURE_EMBED)
+    char b_embed;
+#endif /* #if defined(DSRT_FEATURE_EMBED) */
 
 }; /* struct dsrt_opts */
 

@@ -34,4 +34,12 @@ Description:
 /* Display error messages on stderr */
 #define DSRT_FEATURE_LOG
 
+/* Preview the image in a new window */
+#define DSRT_FEATURE_PREVIEW
+
+/* Embed the preview window into another */
+#if defined(DSRT_FEATURE_PREVIEW)
+#define DSRT_FEATURE_EMBED
+#endif /* #if defined(DSRT_FEATURE_PREVIEW) */
+
 /* end-of-file: dsrt_cfg.h */

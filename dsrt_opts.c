@@ -49,6 +49,20 @@ dsrt_opts_init(
     p_opts->b_center = 0;
 #endif /* #if defined(DSRT_FEATURE_CENTER) */
 
+#if defined(DSRT_FEATURE_PREVIEW)
+
+    p_opts->b_preview = 0;
+
+#if defined(DSRT_FEATURE_EMBED)
+
+    p_opts->i_embed = 0;
+
+    p_opts->b_embed = 0;
+
+#endif /* #if defined(DSRT_FEATURE_EMBED) */
+
+#endif /* #if defined(DSRT_FEATURE_PREVIEW) */
+
     b_valid = 1;
 
     argi = 1;
@@ -56,7 +70,8 @@ dsrt_opts_init(
     while (b_valid && (argi < argc))
     {
 #if defined(DSRT_FEATURE_CENTER)
-        if (0 == strcmp(argv[argi], "--center"))
+        if ((0 == strcmp(argv[argi], "--center"))
+            || (0 == strcmp(argv[argi], "-c")))
         {
             p_opts->b_center = 1;
 
@@ -64,6 +79,37 @@ dsrt_opts_init(
         }
         else
 #endif /* #if defined(DSRT_FEATURE_CENTER) */
+#if defined(DSRT_FEATURE_PREVIEW)
+        if ((0 == strcmp(argv[argi], "--preview"))
+            || (0 == strcmp(argv[argi], "-v")))
+        {
+            p_opts->b_preview = 1;
+
+            argi ++;
+        }
+        else
+#if defined(DSRT_FEATURE_EMBED)
+        if ((0 == strcmp(argv[argi], "--embed"))
+            || (0 == strcmp(argv[argi], "-e")))
+        {
+            char * p_window_id;
+
+            p_window_id = getenv("WINDOWID");
+
+            if (p_window_id)
+            {
+                p_opts->b_embed = 1;
+
+                p_opts->b_preview = 1;
+
+                sscanf(p_window_id, "%lu", &(p_opts->i_embed));
+            }
+
+            argi ++;
+        }
+        else
+#endif /* #if defined(DSRT_FEATURE_EMBED) */
+#endif /* #if defined(DSRT_FEATURE_PREVIEW) */
         if (0 == strcmp(argv[argi], "--"))
         {
             argi ++;

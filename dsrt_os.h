@@ -27,6 +27,9 @@ Comments:
 /* Xlib */
 #include <X11/Xlib.h>
 
+/* XK_... */
+#include <X11/keysym.h>
+
 /* JPEG decoder */
 #include <jpeglib.h>
 
