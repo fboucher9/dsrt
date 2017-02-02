@@ -131,7 +131,11 @@ dsrt_opts_init(
     else
     {
 #if defined(DSRT_FEATURE_LOG)
-        fprintf (stderr, "please specify a filename\n");
+        fprintf(stderr, "Usage: dsrt [options] [--] <file>\n"
+            "Options:\n"
+            "  -c --center     Centered image instead of tiled\n"
+            "  -v --preview    Preview image in a child window\n"
+            "  -e --embed      Preview image embedded into parent\n");
 #endif /* #if defined(DSRT_FEATURE_LOG) */
 
         b_result = 0;
