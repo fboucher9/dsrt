@@ -8,11 +8,17 @@ Description:
 
 */
 
+/* OS headers */
 #include "dsrt_os.h"
 
-#include "dsrt_display.h"
+/* Configuration */
+#include "dsrt_cfg.h"
 
+/* Context */
 #include "dsrt_ctxt.h"
+
+/* Module */
+#include "dsrt_display.h"
 
 /*
 
@@ -94,3 +100,4 @@ dsrt_display_cleanup(
 
 } /* dsrt_display_cleanup() */
 
+/* end-of-file: dsrt_display.c */

@@ -10,6 +10,8 @@ DSRT_SRCS = \
     $(DSRT_DST_PATH)/_obj_dsrt_main.o \
     $(DSRT_DST_PATH)/_obj_dsrt_opts.o \
     $(DSRT_DST_PATH)/_obj_dsrt_display.o \
+    $(DSRT_DST_PATH)/_obj_dsrt_jpeg.o \
+    $(DSRT_DST_PATH)/_obj_dsrt_image.o \
     $(DSRT_DST_PATH)/_obj_dsrt_os.o
 
 .PHONY: all clean
