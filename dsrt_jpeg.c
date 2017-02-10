@@ -8,14 +8,16 @@ Description:
 
 */
 
+/* OS headers */
 #include "dsrt_os.h"
 
+/* Configuration */
 #include "dsrt_cfg.h"
 
+/* Context */
 #include "dsrt_ctxt.h"
 
-#include "dsrt_opts.h"
-
+/* Module */
 #include "dsrt_jpeg.h"
 
 static
