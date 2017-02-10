@@ -1,0 +1,33 @@
+.Dd February 2, 2017
+.Dt DSRT 1
+.Os
+.Sh NAME
+.Nm dsrt \- Display JPEG image on root window
+.Sh SYNOPSIS
+.Nm
+.Op -c|--center
+.Op -v|--preview
+.Op -e|--embed
+.Ar
+.Sh DESCRIPTION
+Display JPEG image on root window
+.Pp
+The options are as follows:
+.Bl -tag -width indent
+.It -c|--center
+.Em Center image in window (instead of tile) .
+.It -v|--preview
+.Em Preview image in a child window (instead of root) .
+.It -e|--embed
+.Em Preview image in current terminal (instead of root) .
+.Pp
+.Sh ENVIRONMENT
+.Pp
+.Bl -tag -width indent
+.It WINDOWID
+.Em Identifier of parent window for embedding
+.Pp
+.Sh SEE ALSO
+.Xr lnch 1 ,
+.Xr bfst 1
+
