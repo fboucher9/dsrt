@@ -37,8 +37,6 @@ dsrt_opts_init(
 {
     char b_result;
 
-    char b_valid;
-
     int argi;
 
     struct dsrt_opts * const p_opts = p_ctxt->p_opts;
@@ -63,11 +61,11 @@ dsrt_opts_init(
 
 #endif /* #if defined(DSRT_FEATURE_PREVIEW) */
 
-    b_valid = 1;
+    b_result = 1;
 
     argi = 1;
 
-    while (b_valid && (argi < argc))
+    while (b_result && (argi < argc))
     {
 #if defined(DSRT_FEATURE_CENTER)
         if ((0 == strcmp(argv[argi], "--center"))
@@ -114,32 +112,79 @@ dsrt_opts_init(
         {
             argi ++;
 
-            b_valid = 0;
+            if (argi < argc)
+            {
+                if (!p_opts->p_filename)
+                {
+                    p_opts->p_filename = argv[argi];
+                }
+                else
+                {
+#if defined(DSRT_FEATURE_LOG)
+                    fprintf(stderr, "too many file names\n");
+#endif /* #if defined(DSRT_FEATURE_LOG) */
+
+                    b_result = 0;
+                }
+
+                argi ++;
+
+                if (argi < argc)
+                {
+#if defined(DSRT_FEATURE_LOG)
+                    fprintf(stderr, "trailing options after file name\n");
+#endif /* #if defined(DSRT_FEATURE_LOG) */
+
+                    b_result = 0;
+                }
+            }
+            else
+            {
+#if defined(DSRT_FEATURE_LOG)
+                fprintf(stderr, "missing file name after --\n");
+#endif /* #if defined(DSRT_FEATURE_LOG) */
+
+                b_result = 0;
+            }
+        }
+        else if ('-' != argv[argi][0])
+        {
+            if (!p_opts->p_filename)
+            {
+                p_opts->p_filename = argv[argi];
+            }
+            else
+            {
+#if defined(DSRT_FEATURE_LOG)
+                fprintf(stderr, "too many file names\n");
+#endif /* #if defined(DSRT_FEATURE_LOG) */
+
+                b_result = 0;
+            }
+
+            argi ++;
         }
         else
         {
-            b_valid = 0;
+            b_result = 0;
         }
     }
 
-    if (argi < argc)
+    if (!p_opts->p_filename)
     {
-        p_opts->p_filename = argv[argi];
-
-        b_result = 1;
+        b_result = 0;
     }
-    else
-    {
+
 #if defined(DSRT_FEATURE_LOG)
+    if (!b_result)
+    {
         fprintf(stderr, "Usage: dsrt [options] [--] <file>\n"
             "Options:\n"
             "  -c --center     Centered image instead of tiled\n"
             "  -v --preview    Preview image in a child window\n"
             "  -e --embed      Preview image embedded into parent\n");
-#endif /* #if defined(DSRT_FEATURE_LOG) */
-
-        b_result = 0;
     }
+#endif /* #if defined(DSRT_FEATURE_LOG) */
 
     return b_result;
 
