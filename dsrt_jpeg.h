@@ -62,4 +62,8 @@ void
 dsrt_jpeg_cleanup(
     struct dsrt_ctxt const * const p_ctxt);
 
+void
+dsrt_jpeg_read_line(
+    struct dsrt_ctxt const * const p_ctxt);
+
 /* end-of-file: dsrt_jpeg.h */

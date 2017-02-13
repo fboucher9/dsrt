@@ -31,18 +31,11 @@ Description:
 /* Image */
 #include "dsrt_image.h"
 
+/* Pixmap */
+#include "dsrt_pixmap.h"
+
 /* Module */
 #include "dsrt_main.h"
-
-struct dsrt_pixmap
-{
-    Drawable pixmap;
-
-    int width;
-
-    int height;
-
-}; /* struct dsrt_pixmap */
 
 struct dsrt_main
 {
@@ -61,16 +54,6 @@ struct dsrt_main
 };
 
 void XDestroyImage(XImage* p_image);
-
-static
-void
-dsrt_main_read_line(
-    struct dsrt_ctxt const * const p_ctxt)
-{
-    struct dsrt_jpeg * const p_jpeg = p_ctxt->p_jpeg;
-
-    jpeg_read_scanlines (&p_jpeg->cinfo, p_jpeg->lineBuf, 1);
-}
 
 static
 void
@@ -172,7 +155,7 @@ dsrt_main_scan_line(
     struct dsrt_ctxt const * const p_ctxt,
     unsigned int y)
 {
-    dsrt_main_read_line(p_ctxt);
+    dsrt_jpeg_read_line(p_ctxt);
 
     dsrt_main_convert_line(p_ctxt);
 
@@ -207,179 +190,6 @@ dsrt_main_scan(
 
 static
 char
-dsrt_pixmap_init(
-    struct dsrt_ctxt const * const p_ctxt)
-{
-    char b_result;
-
-    struct dsrt_pixmap * const p_pixmap = p_ctxt->p_pixmap;
-
-    struct dsrt_opts const * const p_opts = p_ctxt->p_opts;
-
-    (void)(p_opts);
-
-#if defined(DSRT_FEATURE_CENTER)
-    if (p_opts->b_center)
-    {
-#if defined(DSRT_FEATURE_EMBED)
-        if (p_opts->b_embed)
-        {
-            XWindowAttributes wa;
-
-            memset(&wa, 0, sizeof(wa));
-
-            XGetWindowAttributes(p_ctxt->p_display->dis, p_opts->i_embed, &wa);
-
-            p_pixmap->width = wa.width;
-
-            p_pixmap->height = wa.height;
-        }
-        else
-#endif /* #if defined(DSRT_FEATURE_EMBED) */
-        {
-            p_pixmap->width = DisplayWidth(p_ctxt->p_display->dis, p_ctxt->p_display->screen);
-
-            p_pixmap->height = DisplayHeight(p_ctxt->p_display->dis, p_ctxt->p_display->screen);
-        }
-    }
-    else
-#endif /* #if defined(DSRT_FEATURE_CENTER) */
-    {
-        struct dsrt_jpeg const * const p_jpeg = p_ctxt->p_jpeg;
-
-        p_pixmap->width = p_jpeg->width;
-
-        p_pixmap->height = p_jpeg->height;
-    }
-
-    p_pixmap->pixmap = XCreatePixmap(
-        p_ctxt->p_display->dis,
-        p_ctxt->p_display->root,
-        p_pixmap->width,
-        p_pixmap->height,
-        p_ctxt->p_display->depth);
-
-    b_result = 1;
-
-    return b_result;
-
-} /* dsrt_pixmap_init() */
-
-static
-void
-dsrt_pixmap_cleanup(
-    struct dsrt_ctxt const * const p_ctxt)
-{
-    struct dsrt_pixmap * const p_pixmap = p_ctxt->p_pixmap;
-
-    if (None != p_pixmap->pixmap)
-    {
-        XFreePixmap(
-            p_ctxt->p_display->dis,
-            p_pixmap->pixmap);
-
-        p_pixmap->pixmap = None;
-    }
-
-} /* dsrt_pixmap_cleanup() */
-
-static
-void
-dsrt_pixmap_apply(
-    struct dsrt_ctxt const * const p_ctxt)
-{
-    struct dsrt_pixmap const * const p_pixmap = p_ctxt->p_pixmap;
-
-    struct dsrt_display const * const p_display = p_ctxt->p_display;
-
-    struct dsrt_opts const * const p_opts = p_ctxt->p_opts;
-
-    Window i_window;
-
-#if defined(DSRT_FEATURE_PREVIEW)
-    if (p_opts->b_preview)
-    {
-        Window i_parent;
-
-#if defined(DSRT_FEATURE_EMBED)
-        if (p_opts->b_embed)
-        {
-            i_parent = p_opts->i_embed;
-        }
-        else
-#endif /* #if defined(DSRT_FEATURE_EMBED) */
-        {
-            i_parent = p_display->root;
-        }
-
-        i_window = XCreateSimpleWindow(
-            p_display->dis,
-            i_parent,
-            0,
-            0,
-            p_pixmap->width,
-            p_pixmap->height,
-            0,
-            0,
-            0);
-
-        XMapRaised(
-            p_display->dis,
-            i_window);
-
-        XSelectInput(
-            p_display->dis,
-            i_window,
-            KeyPressMask);
-    }
-    else
-#endif /* #if defined(DSRT_FEATURE_PREVIEW) */
-    {
-        i_window = p_display->root;
-    }
-
-    XSetWindowBackgroundPixmap(
-        p_display->dis,
-        i_window,
-        p_pixmap->pixmap);
-
-    XClearWindow(
-        p_display->dis,
-        i_window);
-
-    XFlush(p_display->dis);
-
-#if defined(DSRT_FEATURE_PREVIEW)
-    if (p_opts->b_preview)
-    {
-        char b_continue;
-
-        b_continue = 1;
-
-        while (b_continue)
-        {
-            XEvent o_event;
-
-            XNextEvent(
-                p_display->dis,
-                &(
-                    o_event));
-
-            if (KeyPress == o_event.type)
-            {
-                if (XK_q == XLookupKeysym(&(o_event.xkey), 0))
-                {
-                    b_continue = 0;
-                }
-            }
-        }
-    }
-#endif /* #if defined(DSRT_FEATURE_PREVIEW) */
-
-} /* dsrt_pixmap_apply() */
-
-static
-char
 dsrt_main_show_file(
     struct dsrt_ctxt const * const p_ctxt)
 {
@@ -391,7 +201,45 @@ dsrt_main_show_file(
     {
         char b_jpeg_cleanup = 1;
 
-        if (dsrt_pixmap_init(p_ctxt))
+        int i_pixmap_width;
+
+        int i_pixmap_height;
+
+#if defined(DSRT_FEATURE_CENTER)
+        if (p_opts->b_center)
+        {
+#if defined(DSRT_FEATURE_EMBED)
+            if (p_opts->b_embed)
+            {
+                XWindowAttributes wa;
+
+                memset(&wa, 0, sizeof(wa));
+
+                XGetWindowAttributes(p_ctxt->p_display->dis, p_opts->i_embed, &wa);
+
+                i_pixmap_width = wa.width;
+
+                i_pixmap_height = wa.height;
+            }
+            else
+#endif /* #if defined(DSRT_FEATURE_EMBED) */
+            {
+                i_pixmap_width = DisplayWidth(p_ctxt->p_display->dis, p_ctxt->p_display->screen);
+
+                i_pixmap_height = DisplayHeight(p_ctxt->p_display->dis, p_ctxt->p_display->screen);
+            }
+        }
+        else
+#endif /* #if defined(DSRT_FEATURE_CENTER) */
+        {
+            struct dsrt_jpeg const * const p_jpeg = p_ctxt->p_jpeg;
+
+            i_pixmap_width = p_jpeg->width;
+
+            i_pixmap_height = p_jpeg->height;
+        }
+
+        if (dsrt_pixmap_init(p_ctxt, i_pixmap_width, i_pixmap_height))
         {
             char b_pixmap_cleanup = 1;
 

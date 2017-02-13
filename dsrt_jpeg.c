@@ -129,3 +129,13 @@ dsrt_jpeg_cleanup(
     }
 }
 
+void
+dsrt_jpeg_read_line(
+    struct dsrt_ctxt const * const p_ctxt)
+{
+    struct dsrt_jpeg * const p_jpeg = p_ctxt->p_jpeg;
+
+    jpeg_read_scanlines (&p_jpeg->cinfo, p_jpeg->lineBuf, 1);
+}
+
+/* end-of-file: dsrt_jpeg.c */
