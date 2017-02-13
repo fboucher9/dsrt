@@ -111,6 +111,8 @@ dsrt_main_write_line(
 
     struct dsrt_opts const * const p_opts = p_ctxt->p_opts;
 
+    struct dsrt_display const * const p_display = p_ctxt->p_display;
+
     int x_offset;
 
     int y_offset;
@@ -137,9 +139,9 @@ dsrt_main_write_line(
 
     /* put */
     XPutImage(
-        p_ctxt->p_display->dis,
+        p_display->dis,
         p_ctxt->p_pixmap->pixmap,
-        p_ctxt->p_display->copyGC,
+        p_display->copyGC,
         p_ctxt->p_image->img,
         0,
         0,
@@ -188,6 +190,71 @@ dsrt_main_scan(
 
 } /* dsrt_main_scan() */
 
+/*
+
+Function: dsrt_main_select_pixmap_size()
+
+Description:
+
+    Select the size of the pixmap using options and other available infor-
+    mation.
+
+*/
+static
+void
+dsrt_main_select_pixmap_size(
+    struct dsrt_ctxt const * const p_ctxt,
+    int * const p_pixmap_width,
+    int * const p_pixmap_height)
+{
+    struct dsrt_opts const * const p_opts = p_ctxt->p_opts;
+
+    struct dsrt_display const * const p_display = p_ctxt->p_display;
+
+    int i_pixmap_width;
+
+    int i_pixmap_height;
+
+#if defined(DSRT_FEATURE_CENTER)
+    if (p_opts->b_center)
+    {
+#if defined(DSRT_FEATURE_EMBED)
+        if (p_opts->b_embed)
+        {
+            XWindowAttributes wa;
+
+            memset(&wa, 0, sizeof(wa));
+
+            XGetWindowAttributes(p_display->dis, p_opts->i_embed, &wa);
+
+            i_pixmap_width = wa.width;
+
+            i_pixmap_height = wa.height;
+        }
+        else
+#endif /* #if defined(DSRT_FEATURE_EMBED) */
+        {
+            i_pixmap_width = DisplayWidth(p_display->dis, p_display->screen);
+
+            i_pixmap_height = DisplayHeight(p_display->dis, p_display->screen);
+        }
+    }
+    else
+#endif /* #if defined(DSRT_FEATURE_CENTER) */
+    {
+        struct dsrt_jpeg const * const p_jpeg = p_ctxt->p_jpeg;
+
+        i_pixmap_width = p_jpeg->width;
+
+        i_pixmap_height = p_jpeg->height;
+    }
+
+    *(p_pixmap_width) = i_pixmap_width;
+
+    *(p_pixmap_height) = i_pixmap_height;
+
+} /* dsrt_main_select_pixmap_size() */
+
 static
 char
 dsrt_main_show_file(
@@ -205,39 +272,7 @@ dsrt_main_show_file(
 
         int i_pixmap_height;
 
-#if defined(DSRT_FEATURE_CENTER)
-        if (p_opts->b_center)
-        {
-#if defined(DSRT_FEATURE_EMBED)
-            if (p_opts->b_embed)
-            {
-                XWindowAttributes wa;
-
-                memset(&wa, 0, sizeof(wa));
-
-                XGetWindowAttributes(p_ctxt->p_display->dis, p_opts->i_embed, &wa);
-
-                i_pixmap_width = wa.width;
-
-                i_pixmap_height = wa.height;
-            }
-            else
-#endif /* #if defined(DSRT_FEATURE_EMBED) */
-            {
-                i_pixmap_width = DisplayWidth(p_ctxt->p_display->dis, p_ctxt->p_display->screen);
-
-                i_pixmap_height = DisplayHeight(p_ctxt->p_display->dis, p_ctxt->p_display->screen);
-            }
-        }
-        else
-#endif /* #if defined(DSRT_FEATURE_CENTER) */
-        {
-            struct dsrt_jpeg const * const p_jpeg = p_ctxt->p_jpeg;
-
-            i_pixmap_width = p_jpeg->width;
-
-            i_pixmap_height = p_jpeg->height;
-        }
+        dsrt_main_select_pixmap_size(p_ctxt, &i_pixmap_width, &i_pixmap_height);
 
         if (dsrt_pixmap_init(p_ctxt, i_pixmap_width, i_pixmap_height))
         {
