@@ -41,7 +41,9 @@ dsrt_opts_init(
 
     struct dsrt_opts * const p_opts = p_ctxt->p_opts;
 
-    p_opts->p_filename = NULL;
+    p_opts->a_filename = (char * *)(malloc(argc * sizeof(char *)));
+
+    p_opts->n_files = 0;
 
     p_opts->b_fit = 0;
 
@@ -154,55 +156,20 @@ dsrt_opts_init(
         {
             argi ++;
 
-            if (argi < argc)
+            while (argi < argc)
             {
-                if (!p_opts->p_filename)
-                {
-                    p_opts->p_filename = argv[argi];
-                }
-                else
-                {
-#if defined(DSRT_FEATURE_LOG)
-                    fprintf(stderr, "too many file names\n");
-#endif /* #if defined(DSRT_FEATURE_LOG) */
+                p_opts->a_filename[p_opts->n_files] = strdup(argv[argi]);
 
-                    b_result = 0;
-                }
+                p_opts->n_files ++;
 
                 argi ++;
-
-                if (argi < argc)
-                {
-#if defined(DSRT_FEATURE_LOG)
-                    fprintf(stderr, "trailing options after file name\n");
-#endif /* #if defined(DSRT_FEATURE_LOG) */
-
-                    b_result = 0;
-                }
-            }
-            else
-            {
-#if defined(DSRT_FEATURE_LOG)
-                fprintf(stderr, "missing file name after --\n");
-#endif /* #if defined(DSRT_FEATURE_LOG) */
-
-                b_result = 0;
             }
         }
         else if ('-' != argv[argi][0])
         {
-            if (!p_opts->p_filename)
-            {
-                p_opts->p_filename = argv[argi];
-            }
-            else
-            {
-#if defined(DSRT_FEATURE_LOG)
-                fprintf(stderr, "too many file names\n");
-#endif /* #if defined(DSRT_FEATURE_LOG) */
+            p_opts->a_filename[p_opts->n_files] = strdup(argv[argi]);
 
-                b_result = 0;
-            }
+            p_opts->n_files ++;
 
             argi ++;
         }
@@ -212,7 +179,7 @@ dsrt_opts_init(
         }
     }
 
-    if (!p_opts->p_filename)
+    if (!p_opts->n_files)
     {
         b_result = 0;
     }
@@ -220,11 +187,13 @@ dsrt_opts_init(
 #if defined(DSRT_FEATURE_LOG)
     if (!b_result)
     {
-        fprintf(stderr, "Usage: dsrt [options] [--] <file>\n"
+        fprintf(stderr, "Usage: dsrt [options] [--] <files>\n"
             "Options:\n"
             "  -c --center     Centered image instead of tiled\n"
             "  -v --preview    Preview image in a child window\n"
-            "  -e --embed      Preview image embedded into parent\n");
+            "  -e --embed      Preview image embedded into parent\n"
+            "  -f --fit        Stretch to fir into window\n"
+            "  -s --shadow     Blend image with black\n");
     }
 #endif /* #if defined(DSRT_FEATURE_LOG) */
 

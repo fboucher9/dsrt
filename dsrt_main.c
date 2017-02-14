@@ -320,13 +320,12 @@ dsrt_main_select_pixmap_size(
 static
 char
 dsrt_main_show_file(
-    struct dsrt_ctxt const * const p_ctxt)
+    struct dsrt_ctxt const * const p_ctxt,
+    char const * const p_filename)
 {
     char b_result;
 
-    struct dsrt_opts const * const p_opts = p_ctxt->p_opts;
-
-    if (dsrt_jpeg_init(p_ctxt, p_opts->p_filename))
+    if (dsrt_jpeg_init(p_ctxt, p_filename))
     {
         char b_jpeg_cleanup = 1;
 
@@ -464,13 +463,35 @@ dsrt_main(
             {
                 char c_event;
 
+                unsigned int i_file_iterator;
+
+                i_file_iterator = 0;
+
                 c_event = ' ';
+
                 while ('q' != c_event)
                 {
-                    if (dsrt_main_show_file(p_ctxt))
+                    if (dsrt_main_show_file(p_ctxt, p_ctxt->p_opts->a_filename[i_file_iterator]))
                     {
                         /* Wait for event from preview window... */
                         c_event = dsrt_view_event(p_ctxt);
+
+                        if ('n' == c_event)
+                        {
+                            i_file_iterator ++;
+                            if (i_file_iterator >= p_ctxt->p_opts->n_files)
+                            {
+                                i_file_iterator = 0;
+                            }
+                        }
+                        else if ('p' == c_event)
+                        {
+                            if (0 == i_file_iterator)
+                            {
+                                i_file_iterator = p_ctxt->p_opts->n_files;
+                            }
+                            i_file_iterator --;
+                        }
                     }
                     else
                     {

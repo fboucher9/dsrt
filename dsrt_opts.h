@@ -9,7 +9,7 @@
 
 struct dsrt_opts
 {
-    char const * p_filename;
+    char * * a_filename;
 
 #if defined(DSRT_FEATURE_EMBED)
     unsigned long int i_embed;
@@ -18,6 +18,8 @@ struct dsrt_opts
 #if defined(DSRT_FEATURE_SHADOW)
     unsigned int i_shadow;
 #endif /* #if defined(DSRT_FEATURE_SHADOW) */
+
+    unsigned int n_files;
 
     char b_fit;
 

@@ -185,7 +185,13 @@ dsrt_view_event(
                     }
                     else if (XK_space == ks)
                     {
-                        c_event = ' ';
+                        c_event = 'n';
+
+                        b_continue = 0;
+                    }
+                    else if (XK_BackSpace == ks)
+                    {
+                        c_event = 'p';
 
                         b_continue = 0;
                     }
