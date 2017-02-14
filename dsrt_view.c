@@ -64,6 +64,11 @@ dsrt_view_init(
             p_view->width = wa.width;
 
             p_view->height = wa.height;
+
+            XSelectInput(
+                p_display->dis,
+                i_parent,
+                StructureNotifyMask);
         }
         else
 #endif /* #if defined(DSRT_FEATURE_EMBED) */
@@ -93,7 +98,7 @@ dsrt_view_init(
         XSelectInput(
             p_display->dis,
             p_view->h,
-            KeyPressMask);
+            KeyPressMask | StructureNotifyMask);
     }
     else
 #endif /* #if defined(DSRT_FEATURE_PREVIEW) */
@@ -176,35 +181,28 @@ dsrt_view_event(
                 {
                     c_event = ' ';
 
-                    /* Refresh view size */
-
-                    {
-                        XWindowAttributes wa;
-
-                        Window h;
-
-                        memset(&wa, 0, sizeof(wa));
-
-#if defined(DSRT_FEATURE_EMBED)
-                        if (p_opts->b_embed)
-                        {
-                            h = p_opts->i_embed;
-
-                        }
-                        else
-#endif /* #if defined(DSRT_FEATURE_EMBED) */
-                        {
-                            h = p_view->h;
-                        }
-
-                        XGetWindowAttributes(p_display->dis, h, &wa);
-
-                        p_view->width = wa.width;
-
-                        p_view->height = wa.height;
-                    }
-
                     b_continue = 0;
+                }
+            }
+            else if (ConfigureNotify == o_event.type)
+            {
+                if (o_event.xconfigure.window == p_opts->i_embed)
+                {
+                    XWindowChanges wc;
+
+                    memset(&wc, 0, sizeof(wc));
+
+                    wc.width = o_event.xconfigure.width;
+
+                    wc.height = o_event.xconfigure.height;
+
+                    XConfigureWindow(p_display->dis, p_view->h, CWWidth|CWHeight, &wc);
+                }
+                else if (o_event.xconfigure.window == p_view->h)
+                {
+                    p_view->width = o_event.xconfigure.width;
+
+                    p_view->height = o_event.xconfigure.height;
                 }
             }
         }
