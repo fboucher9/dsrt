@@ -26,6 +26,9 @@ Description:
 /* Display */
 #include "dsrt_display.h"
 
+/* View */
+#include "dsrt_view.h"
+
 char
 dsrt_pixmap_init(
     struct dsrt_ctxt const * const p_ctxt,
@@ -78,89 +81,18 @@ dsrt_pixmap_apply(
 
     struct dsrt_display const * const p_display = p_ctxt->p_display;
 
-    struct dsrt_opts const * const p_opts = p_ctxt->p_opts;
-
-    Window i_window;
-
-#if defined(DSRT_FEATURE_PREVIEW)
-    if (p_opts->b_preview)
-    {
-        Window i_parent;
-
-#if defined(DSRT_FEATURE_EMBED)
-        if (p_opts->b_embed)
-        {
-            i_parent = p_opts->i_embed;
-        }
-        else
-#endif /* #if defined(DSRT_FEATURE_EMBED) */
-        {
-            i_parent = p_display->root;
-        }
-
-        i_window = XCreateSimpleWindow(
-            p_display->dis,
-            i_parent,
-            0,
-            0,
-            p_pixmap->width,
-            p_pixmap->height,
-            0,
-            0,
-            0);
-
-        XMapRaised(
-            p_display->dis,
-            i_window);
-
-        XSelectInput(
-            p_display->dis,
-            i_window,
-            KeyPressMask);
-    }
-    else
-#endif /* #if defined(DSRT_FEATURE_PREVIEW) */
-    {
-        i_window = p_display->root;
-    }
+    struct dsrt_view const * const p_view = p_ctxt->p_view;
 
     XSetWindowBackgroundPixmap(
         p_display->dis,
-        i_window,
+        p_view->h,
         p_pixmap->pixmap);
 
     XClearWindow(
         p_display->dis,
-        i_window);
+        p_view->h);
 
     XFlush(p_display->dis);
-
-#if defined(DSRT_FEATURE_PREVIEW)
-    if (p_opts->b_preview)
-    {
-        char b_continue;
-
-        b_continue = 1;
-
-        while (b_continue)
-        {
-            XEvent o_event;
-
-            XNextEvent(
-                p_display->dis,
-                &(
-                    o_event));
-
-            if (KeyPress == o_event.type)
-            {
-                if (XK_q == XLookupKeysym(&(o_event.xkey), 0))
-                {
-                    b_continue = 0;
-                }
-            }
-        }
-    }
-#endif /* #if defined(DSRT_FEATURE_PREVIEW) */
 
 } /* dsrt_pixmap_apply() */
 

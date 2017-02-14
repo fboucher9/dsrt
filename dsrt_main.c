@@ -34,6 +34,9 @@ Description:
 /* Pixmap */
 #include "dsrt_pixmap.h"
 
+/* View */
+#include "dsrt_view.h"
+
 /* Module */
 #include "dsrt_main.h"
 
@@ -50,6 +53,8 @@ struct dsrt_main
     struct dsrt_image o_image;
 
     struct dsrt_pixmap o_pixmap;
+
+    struct dsrt_view o_view;
 
 };
 
@@ -223,9 +228,9 @@ dsrt_main_select_pixmap_size(
 {
     struct dsrt_opts const * const p_opts = p_ctxt->p_opts;
 
-    struct dsrt_display const * const p_display = p_ctxt->p_display;
-
     struct dsrt_jpeg const * const p_jpeg = p_ctxt->p_jpeg;
+
+    struct dsrt_view const * const p_view = p_ctxt->p_view;
 
     int i_pixmap_width;
 
@@ -238,26 +243,9 @@ dsrt_main_select_pixmap_size(
 #if defined(DSRT_FEATURE_CENTER)
     if (p_opts->b_center)
     {
-#if defined(DSRT_FEATURE_EMBED)
-        if (p_opts->b_embed)
-        {
-            XWindowAttributes wa;
+        i_pixmap_width = p_view->width;
 
-            memset(&wa, 0, sizeof(wa));
-
-            XGetWindowAttributes(p_display->dis, p_opts->i_embed, &wa);
-
-            i_pixmap_width = wa.width;
-
-            i_pixmap_height = wa.height;
-        }
-        else
-#endif /* #if defined(DSRT_FEATURE_EMBED) */
-        {
-            i_pixmap_width = DisplayWidth(p_display->dis, p_display->screen);
-
-            i_pixmap_height = DisplayHeight(p_display->dis, p_display->screen);
-        }
+        i_pixmap_height = p_view->height;
 
         i_image_width = p_jpeg->width;
 
@@ -266,20 +254,13 @@ dsrt_main_select_pixmap_size(
     else
 #endif /* #if defined(DSRT_FEATURE_CENTER) */
     {
-#if defined(DSRT_FEATURE_EMBED)
-        if (p_opts->b_embed)
+        /* Calculate best fit */
+        if (p_opts->b_fit)
         {
-            XWindowAttributes wa;
+            i_pixmap_width = p_view->width;
 
-            memset(&wa, 0, sizeof(wa));
+            i_pixmap_height = p_view->height;
 
-            XGetWindowAttributes(p_display->dis, p_opts->i_embed, &wa);
-
-            i_pixmap_width = wa.width;
-
-            i_pixmap_height = wa.height;
-
-            /* Calculate best fit */
             i_image_height = ((p_jpeg->height * i_pixmap_width) / p_jpeg->width);
 
             if (i_image_height > i_pixmap_height)
@@ -294,7 +275,6 @@ dsrt_main_select_pixmap_size(
             }
         }
         else
-#endif /* #if defined(DSRT_FEATURE_EMBED) */
         {
             i_pixmap_width = p_jpeg->width;
 
@@ -428,6 +408,8 @@ dsrt_main_init_ctxt(
 
     p_ctxt->p_pixmap = &p_main->o_pixmap;
 
+    p_ctxt->p_view = &p_main->o_view;
+
 } /* dsrt_main_init_ctxt() */
 
 /*
@@ -448,29 +430,50 @@ dsrt_main(
 
     struct dsrt_main o_main;
 
+    struct dsrt_ctxt const * p_ctxt = &o_main.o_ctxt;
+
     dsrt_main_init_ctxt(&o_main);
 
-    if (dsrt_display_init(&o_main.o_ctxt))
+    if (dsrt_display_init(p_ctxt))
     {
-        if (dsrt_opts_init(&o_main.o_ctxt, argc, argv))
+        if (dsrt_opts_init(p_ctxt, argc, argv))
         {
-            if (dsrt_main_show_file(&o_main.o_ctxt))
+            /* Create a preview window */
+            if (dsrt_view_init(p_ctxt))
             {
+                char c_event;
+
+                c_event = ' ';
+                while ('q' != c_event)
+                {
+                    if (dsrt_main_show_file(p_ctxt))
+                    {
+                        /* Wait for event from preview window... */
+                        c_event = dsrt_view_event(p_ctxt);
+                    }
+                    else
+                    {
+                        c_event = 'q';
+                    }
+                }
+
                 i_result = 0;
+
+                dsrt_view_cleanup(p_ctxt);
             }
             else
             {
                 i_result = 1;
             }
 
-            dsrt_opts_cleanup(&o_main.o_ctxt);
+            dsrt_opts_cleanup(p_ctxt);
         }
         else
         {
             i_result = 1;
         }
 
-        dsrt_display_cleanup(&o_main.o_ctxt);
+        dsrt_display_cleanup(p_ctxt);
     }
     else
     {

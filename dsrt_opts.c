@@ -43,6 +43,8 @@ dsrt_opts_init(
 
     p_opts->p_filename = NULL;
 
+    p_opts->b_fit = 0;
+
 #if defined(DSRT_FEATURE_CENTER)
     p_opts->b_center = 0;
 #endif /* #if defined(DSRT_FEATURE_CENTER) */
@@ -108,6 +110,15 @@ dsrt_opts_init(
         else
 #endif /* #if defined(DSRT_FEATURE_EMBED) */
 #endif /* #if defined(DSRT_FEATURE_PREVIEW) */
+        if ((0 == strcmp(argv[argi], "--fit"))
+            || (0 == strcmp(argv[argi], "-f")))
+        {
+            /* */
+            p_opts->b_fit = 1;
+
+            argi ++;
+        }
+        else
         if (0 == strcmp(argv[argi], "--"))
         {
             argi ++;

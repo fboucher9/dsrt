@@ -13,6 +13,7 @@ DSRT_SRCS = \
     $(DSRT_DST_PATH)/_obj_dsrt_jpeg.o \
     $(DSRT_DST_PATH)/_obj_dsrt_image.o \
     $(DSRT_DST_PATH)/_obj_dsrt_pixmap.o \
+    $(DSRT_DST_PATH)/_obj_dsrt_view.o \
     $(DSRT_DST_PATH)/_obj_dsrt_os.o
 
 .PHONY: all clean
