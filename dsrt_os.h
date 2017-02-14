@@ -33,4 +33,7 @@ Comments:
 /* JPEG decoder */
 #include <jpeglib.h>
 
+/* usleep() */
+#include <unistd.h>
+
 /* end-of-file: dsrt_os.h */

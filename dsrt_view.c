@@ -156,53 +156,86 @@ dsrt_view_event(
     {
         char b_continue;
 
+        int i_timeout;
+
         b_continue = 1;
+
+        i_timeout = 0;
 
         while (b_continue)
         {
             XEvent o_event;
 
-            XNextEvent(
-                p_display->dis,
-                &(
-                    o_event));
-
-            if (KeyPress == o_event.type)
+            if (XPending(p_display->dis))
             {
-                KeySym const ks = XLookupKeysym(&(o_event.xkey), 0);
+                XNextEvent(
+                    p_display->dis,
+                    &(
+                        o_event));
 
-                if (XK_q == ks)
+                if (KeyPress == o_event.type)
                 {
-                    c_event = 'q';
+                    KeySym const ks = XLookupKeysym(&(o_event.xkey), 0);
 
-                    b_continue = 0;
+                    if (XK_q == ks)
+                    {
+                        c_event = 'q';
+
+                        b_continue = 0;
+                    }
+                    else if (XK_space == ks)
+                    {
+                        c_event = ' ';
+
+                        b_continue = 0;
+                    }
                 }
-                else if (XK_space == ks)
+                else if (ConfigureNotify == o_event.type)
                 {
-                    c_event = ' ';
+                    if (o_event.xconfigure.window == p_opts->i_embed)
+                    {
+                        XWindowChanges wc;
 
-                    b_continue = 0;
+                        memset(&wc, 0, sizeof(wc));
+
+                        wc.width = o_event.xconfigure.width;
+
+                        wc.height = o_event.xconfigure.height;
+
+                        XConfigureWindow(p_display->dis, p_view->h, CWWidth|CWHeight, &wc);
+                    }
+                    else if (o_event.xconfigure.window == p_view->h)
+                    {
+                        if (o_event.xconfigure.width != p_view->width)
+                        {
+                            p_view->width = o_event.xconfigure.width;
+
+                            i_timeout = 10; /* 160 msec */
+                        }
+
+                        if (o_event.xconfigure.height != p_view->height)
+                        {
+                            p_view->height = o_event.xconfigure.height;
+
+                            i_timeout = 10; /* 160 msec */
+                        }
+                    }
                 }
             }
-            else if (ConfigureNotify == o_event.type)
+            else
             {
-                if (o_event.xconfigure.window == p_opts->i_embed)
+                usleep(16ul * 1000ul);
+
+                if (i_timeout)
                 {
-                    XWindowChanges wc;
+                    i_timeout --;
 
-                    memset(&wc, 0, sizeof(wc));
+                    if (!i_timeout)
+                    {
+                        c_event = ' ';
 
-                    wc.width = o_event.xconfigure.width;
-
-                    wc.height = o_event.xconfigure.height;
-
-                    XConfigureWindow(p_display->dis, p_view->h, CWWidth|CWHeight, &wc);
-                }
-                else if (o_event.xconfigure.window == p_view->h)
-                {
-                    p_view->width = o_event.xconfigure.width;
-
-                    p_view->height = o_event.xconfigure.height;
+                        b_continue = 0;
+                    }
                 }
             }
         }
