@@ -68,36 +68,48 @@ dsrt_main_convert_line(
 
     u_int16_t * newBuf16 = (u_int16_t *)(p_ctxt->p_image->img->data);
 
-    int xr = p_jpeg->xr0;
+    signed long int dx;
 
-    int xg = p_jpeg->xg0;
-
-    int xb = p_jpeg->xb0;
-
-    while (xr < p_jpeg->lineOffset)
+    /* for all destination pixels */
+    for (dx = 0; dx < p_ctxt->p_image->width; dx++)
     {
-        u_int32_t const col =
-            (u_int32_t)(
-                ((u_int32_t)(p_jpeg->lineBuf[0][xr] * p_display->rRatio) & p_display->red_mask) |
-                ((u_int32_t)(p_jpeg->lineBuf[0][xg] * p_display->gRatio) & p_display->green_mask) |
-                ((u_int32_t)(p_jpeg->lineBuf[0][xb] * p_display->bRatio) & p_display->blue_mask));
+        u_int32_t col;
 
+        /* calculate source position */
+        signed long int sx = ((dx * p_jpeg->width) / p_ctxt->p_image->width);
+
+        if ((sx >= 0) && (sx < p_jpeg->width))
+        {
+            int xr = p_jpeg->xr0 + (sx * p_jpeg->bytesPerPix);
+
+            int xg = p_jpeg->xg0 + (sx * p_jpeg->bytesPerPix);
+
+            int xb = p_jpeg->xb0 + (sx * p_jpeg->bytesPerPix);
+
+            /* get color of source pixel(s) */
+            col =
+                (u_int32_t)(
+                    ((u_int32_t)(p_jpeg->lineBuf[0][xr] * p_display->rRatio) & p_display->red_mask) |
+                    ((u_int32_t)(p_jpeg->lineBuf[0][xg] * p_display->gRatio) & p_display->green_mask) |
+                    ((u_int32_t)(p_jpeg->lineBuf[0][xb] * p_display->bRatio) & p_display->blue_mask));
+        }
+        else
+        {
+            col =
+                0;
+        }
+
+        /* store into destination */
         if (p_display->depth > 16)
         {
-            *newBuf32 = col;
+            *newBuf32 += col;
             ++newBuf32;
         }
         else
         {
-            *newBuf16 = (u_int16_t)col;
+            *newBuf16 += (u_int16_t)(col);
             ++newBuf16;
         }
-
-        xr += p_jpeg->bytesPerPix;
-
-        xg += p_jpeg->bytesPerPix;
-
-        xb += p_jpeg->bytesPerPix;
     }
 }
 
@@ -107,35 +119,15 @@ dsrt_main_write_line(
     struct dsrt_ctxt const * const p_ctxt,
     unsigned int const y)
 {
-    struct dsrt_jpeg const * const p_jpeg = p_ctxt->p_jpeg;
-
-    struct dsrt_opts const * const p_opts = p_ctxt->p_opts;
-
     struct dsrt_display const * const p_display = p_ctxt->p_display;
 
     int x_offset;
 
     int y_offset;
 
-    (void)(p_opts);
+    x_offset = ((p_ctxt->p_pixmap->width - p_ctxt->p_image->width) / 2);
 
-#if defined(DSRT_FEATURE_CENTER)
-    if (p_opts->b_center)
-    {
-        /* Todo: command line options for -fit or -tile */
-        /* Todo: default background color for -fit */
-
-        x_offset = ((p_ctxt->p_pixmap->width - p_jpeg->width) / 2);
-
-        y_offset = ((p_ctxt->p_pixmap->height - p_jpeg->height) / 2);
-    }
-    else
-#endif /* #if defined(DSRT_FEATURE_CENTER) */
-    {
-        x_offset = 0;
-
-        y_offset = 0;
-    }
+    y_offset = ((p_ctxt->p_pixmap->height - p_ctxt->p_image->height) / 2);
 
     /* put */
     XPutImage(
@@ -147,23 +139,9 @@ dsrt_main_write_line(
         0,
         x_offset,
         y_offset + y,
-        p_jpeg->width,
+        p_ctxt->p_image->width,
         1);
 }
-
-static
-void
-dsrt_main_scan_line(
-    struct dsrt_ctxt const * const p_ctxt,
-    unsigned int y)
-{
-    dsrt_jpeg_read_line(p_ctxt);
-
-    dsrt_main_convert_line(p_ctxt);
-
-    dsrt_main_write_line(p_ctxt, y);
-
-} /* dsrt_main_scan_line() */
 
 /*
 
@@ -177,17 +155,53 @@ void
 dsrt_main_scan(
     struct dsrt_ctxt const * const p_ctxt)
 {
-    unsigned int y;
+    signed long int dy;
+
+    int it;
+
+    signed long int sy;
 
     struct dsrt_jpeg * const p_jpeg = p_ctxt->p_jpeg;
 
-    for (y = 0; y < p_jpeg->cinfo.output_height; ++y)
+    it = -1;
+
+    for (dy = 0; dy < p_ctxt->p_image->height; ++dy)
     {
-        dsrt_main_scan_line(
-            p_ctxt,
-            y);
+        /* Clear the line */
+        if (p_ctxt->p_display->depth > 16)
+        {
+            memset(p_ctxt->p_image->img->data, 0, p_ctxt->p_image->width * 4);
+        }
+        else
+        {
+            memset(p_ctxt->p_image->img->data, 0, p_ctxt->p_image->width * 2);
+        }
+
+        /* Calculate srcy */
+        sy = ((dy * p_jpeg->height) / p_ctxt->p_image->height);
+
+        if ((sy >= 0) && ((unsigned int)(sy) < p_jpeg->cinfo.output_height))
+        {
+            /* Advance into reach srcy */
+            while (it < sy)
+            {
+                it ++;
+
+                dsrt_jpeg_read_line(p_ctxt);
+            }
+
+            dsrt_main_convert_line(p_ctxt);
+
+            dsrt_main_write_line(p_ctxt, dy);
+        }
     }
 
+    while ((unsigned int)(it + 1) < p_jpeg->cinfo.output_height)
+    {
+        it ++;
+
+        dsrt_jpeg_read_line(p_ctxt);
+    }
 } /* dsrt_main_scan() */
 
 /*
@@ -205,15 +219,23 @@ void
 dsrt_main_select_pixmap_size(
     struct dsrt_ctxt const * const p_ctxt,
     int * const p_pixmap_width,
-    int * const p_pixmap_height)
+    int * const p_pixmap_height,
+    int * const p_image_width,
+    int * const p_image_height)
 {
     struct dsrt_opts const * const p_opts = p_ctxt->p_opts;
 
     struct dsrt_display const * const p_display = p_ctxt->p_display;
 
+    struct dsrt_jpeg const * const p_jpeg = p_ctxt->p_jpeg;
+
     int i_pixmap_width;
 
     int i_pixmap_height;
+
+    int i_image_width;
+
+    int i_image_height;
 
 #if defined(DSRT_FEATURE_CENTER)
     if (p_opts->b_center)
@@ -238,20 +260,61 @@ dsrt_main_select_pixmap_size(
 
             i_pixmap_height = DisplayHeight(p_display->dis, p_display->screen);
         }
+
+        i_image_width = p_jpeg->width;
+
+        i_image_height = p_jpeg->height;
     }
     else
 #endif /* #if defined(DSRT_FEATURE_CENTER) */
     {
-        struct dsrt_jpeg const * const p_jpeg = p_ctxt->p_jpeg;
+#if defined(DSRT_FEATURE_EMBED)
+        if (p_opts->b_embed)
+        {
+            XWindowAttributes wa;
 
-        i_pixmap_width = p_jpeg->width;
+            memset(&wa, 0, sizeof(wa));
 
-        i_pixmap_height = p_jpeg->height;
+            XGetWindowAttributes(p_display->dis, p_opts->i_embed, &wa);
+
+            i_pixmap_width = wa.width;
+
+            i_pixmap_height = wa.height;
+
+            /* Calculate best fit */
+            i_image_height = ((p_jpeg->height * i_pixmap_width) / p_jpeg->width);
+
+            if (i_image_height > i_pixmap_height)
+            {
+                i_image_width = ((p_jpeg->width * i_pixmap_height) / p_jpeg->height);
+
+                i_image_height = i_pixmap_height;
+            }
+            else
+            {
+                i_image_width = i_pixmap_width;
+            }
+        }
+        else
+#endif /* #if defined(DSRT_FEATURE_EMBED) */
+        {
+            i_pixmap_width = p_jpeg->width;
+
+            i_pixmap_height = p_jpeg->height;
+
+            i_image_width = i_pixmap_width;
+
+            i_image_height = i_pixmap_height;
+        }
     }
 
     *(p_pixmap_width) = i_pixmap_width;
 
     *(p_pixmap_height) = i_pixmap_height;
+
+    *(p_image_width) = i_image_width;
+
+    *(p_image_height) = i_image_height;
 
 } /* dsrt_main_select_pixmap_size() */
 
@@ -272,13 +335,17 @@ dsrt_main_show_file(
 
         int i_pixmap_height;
 
-        dsrt_main_select_pixmap_size(p_ctxt, &i_pixmap_width, &i_pixmap_height);
+        int i_image_width;
+
+        int i_image_height;
+
+        dsrt_main_select_pixmap_size(p_ctxt, &i_pixmap_width, &i_pixmap_height, &i_image_width, &i_image_height);
 
         if (dsrt_pixmap_init(p_ctxt, i_pixmap_width, i_pixmap_height))
         {
             char b_pixmap_cleanup = 1;
 
-            if (dsrt_image_init(p_ctxt, p_ctxt->p_jpeg->width))
+            if (dsrt_image_init(p_ctxt, i_image_width, i_image_height))
             {
                 dsrt_main_scan(p_ctxt);
 

@@ -47,7 +47,8 @@ get_byte_order(void)
 char
 dsrt_image_init(
     struct dsrt_ctxt const * const p_ctxt,
-    int const i_width)
+    int const i_width,
+    int const i_height)
 {
     char b_result;
 
@@ -99,6 +100,10 @@ dsrt_image_init(
 
             /*The bitmap_bit_order doesn't matter with ZPixmap images.*/
             p_image->img->bitmap_bit_order = MSBFirst;
+
+            p_image->width = i_width;
+
+            p_image->height = i_height;
 
             b_result = 1;
         }
