@@ -23,6 +23,8 @@ Description:
 /* Display */
 #include "dsrt_display.h"
 
+void XDestroyImage(XImage* p_image);
+
 #if defined(DSRT_FEATURE_MSB)
 
 static

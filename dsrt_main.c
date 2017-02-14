@@ -53,8 +53,6 @@ struct dsrt_main
 
 };
 
-void XDestroyImage(XImage* p_image);
-
 static
 void
 dsrt_main_convert_line(
