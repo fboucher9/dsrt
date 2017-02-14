@@ -249,7 +249,46 @@ dsrt_view_event(
     else
 #endif /* #if defined(DSRT_FEATURE_PREVIEW) */
     {
-        /* Grab keys from standard input */
+        /* Enable interactive mode when there a list of files */
+        if (p_opts->n_files > 1)
+        {
+            char b_continue;
+
+            b_continue = 1;
+
+            while (b_continue)
+            {
+                /* Grab keys from standard input */
+                char buf[80];
+                if (buf == fgets(buf, sizeof(buf), stdin))
+                {
+                    if (buf[0] == 'n')
+                    {
+                        c_event = 'n';
+
+                        b_continue = 0;
+                    }
+                    else if (buf[0] == 'p')
+                    {
+                        c_event = 'p';
+
+                        b_continue = 0;
+                    }
+                    else if (buf[0] == 'q')
+                    {
+                        c_event = 'q';
+
+                        b_continue = 0;
+                    }
+                }
+                else
+                {
+                    c_event = 'q';
+
+                    b_continue = 0;
+                }
+            }
+        }
     }
 
     return c_event;
