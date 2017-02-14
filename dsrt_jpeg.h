@@ -6,6 +6,8 @@ Module: dsrt_jpeg.h
 
 Description:
 
+    Decode a jpeg file one line at a time.
+
 */
 
 /* Reverse include guard */
@@ -23,6 +25,8 @@ struct dsrt_ctxt;
 Structure: dsrt_jpeg
 
 Description:
+
+    State for jpeg file decoder.
 
 */
 struct dsrt_jpeg

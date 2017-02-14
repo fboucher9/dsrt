@@ -42,4 +42,7 @@ Description:
 #define DSRT_FEATURE_EMBED
 #endif /* #if defined(DSRT_FEATURE_PREVIEW) */
 
+/* Blend the image with black */
+#define DSRT_FEATURE_SHADOW
+
 /* end-of-file: dsrt_cfg.h */

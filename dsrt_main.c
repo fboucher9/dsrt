@@ -67,11 +67,15 @@ dsrt_main_convert_line(
 
     struct dsrt_display const * const p_display = p_ctxt->p_display;
 
+    struct dsrt_opts const * const p_opts = p_ctxt->p_opts;
+
     u_int32_t * newBuf32 = (u_int32_t *)(p_ctxt->p_image->img->data);
 
     u_int16_t * newBuf16 = (u_int16_t *)(p_ctxt->p_image->img->data);
 
     signed long int dx;
+
+    (void)(p_opts);
 
     /* for all destination pixels */
     for (dx = 0; dx < p_ctxt->p_image->width; dx++)
@@ -89,12 +93,29 @@ dsrt_main_convert_line(
 
             int xb = p_jpeg->xb0 + (sx * p_jpeg->bytesPerPix);
 
+            u_int32_t col_r = (u_int32_t)(p_jpeg->lineBuf[0][xr]);
+
+            u_int32_t col_g = (u_int32_t)(p_jpeg->lineBuf[0][xg]);
+
+            u_int32_t col_b = (u_int32_t)(p_jpeg->lineBuf[0][xb]);
+
+#if defined(DSRT_FEATURE_SHADOW)
+            if (p_opts->b_shadow)
+            {
+                col_r = (col_r * p_opts->i_shadow) / 100u;
+
+                col_g = (col_g * p_opts->i_shadow) / 100u;
+
+                col_b = (col_b * p_opts->i_shadow) / 100u;
+            }
+#endif /* #if defined(DSRT_FEATURE_SHADOW) */
+
             /* get color of source pixel(s) */
             col =
                 (u_int32_t)(
-                    ((u_int32_t)(p_jpeg->lineBuf[0][xr] * p_display->rRatio) & p_display->red_mask) |
-                    ((u_int32_t)(p_jpeg->lineBuf[0][xg] * p_display->gRatio) & p_display->green_mask) |
-                    ((u_int32_t)(p_jpeg->lineBuf[0][xb] * p_display->bRatio) & p_display->blue_mask));
+                    ((u_int32_t)(col_r * p_display->rRatio) & p_display->red_mask) |
+                    ((u_int32_t)(col_g * p_display->gRatio) & p_display->green_mask) |
+                    ((u_int32_t)(col_b * p_display->bRatio) & p_display->blue_mask));
         }
         else
         {

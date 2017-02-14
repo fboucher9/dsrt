@@ -49,6 +49,12 @@ dsrt_opts_init(
     p_opts->b_center = 0;
 #endif /* #if defined(DSRT_FEATURE_CENTER) */
 
+#if defined(DSRT_FEATURE_SHADOW)
+    p_opts->i_shadow = 100u;
+
+    p_opts->b_shadow = 0;
+#endif /* #if defined(DSRT_FEATURE_SHADOW) */
+
 #if defined(DSRT_FEATURE_PREVIEW)
 
     p_opts->b_preview = 0;
@@ -110,6 +116,31 @@ dsrt_opts_init(
         else
 #endif /* #if defined(DSRT_FEATURE_EMBED) */
 #endif /* #if defined(DSRT_FEATURE_PREVIEW) */
+#if defined(DSRT_FEATURE_SHADOW)
+        if ((0 == strcmp(argv[argi], "--shadow"))
+            || (0 == strcmp(argv[argi], "-s")))
+        {
+            argi ++;
+
+            if (argi < argc)
+            {
+                sscanf(argv[argi], "%u", &p_opts->i_shadow);
+
+                p_opts->b_shadow = 1;
+
+                argi ++;
+            }
+            else
+            {
+#if defined(DSRT_FEATURE_LOG)
+                fprintf(stderr, "missing shadow argument\n");
+#endif /* #if defined(DSRT_FEATURE_LOG) */
+
+                b_result = 0;
+            }
+        }
+        else
+#endif /* #if defined(DSRT_FEATURE_SHADOW) */
         if ((0 == strcmp(argv[argi], "--fit"))
             || (0 == strcmp(argv[argi], "-f")))
         {

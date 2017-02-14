@@ -15,9 +15,15 @@ struct dsrt_opts
     unsigned long int i_embed;
 #endif /* #if defined(DSRT_FEATURE_EMBED) */
 
+#if defined(DSRT_FEATURE_SHADOW)
+    unsigned int i_shadow;
+#endif /* #if defined(DSRT_FEATURE_SHADOW) */
+
     char b_fit;
 
-    /* char b_shadow; */
+#if defined(DSRT_FEATURE_SHADOW)
+    char b_shadow;
+#endif /* #if defined(DSRT_FEATURE_SHADOW) */
 
 #if defined(DSRT_FEATURE_CENTER)
     char b_center;

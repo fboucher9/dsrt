@@ -6,6 +6,8 @@ Module: dsrt_jpeg.c
 
 Description:
 
+    Decode a jpeg file one line at a time.
+
 */
 
 /* OS headers */
