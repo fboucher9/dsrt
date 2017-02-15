@@ -75,9 +75,9 @@ dsrt_view_init(
         {
             i_parent = p_display->root;
 
-            p_view->width = 320;
+            p_view->width = 1024;
 
-            p_view->height = 200;
+            p_view->height = 768;
         }
 
         p_view->h = XCreateSimpleWindow(
@@ -105,9 +105,9 @@ dsrt_view_init(
     {
         p_view->h = p_display->root;
 
-        p_view->width = DisplayWidth(p_display->dis, p_display->screen);
+        p_view->width = p_display->width;
 
-        p_view->height = DisplayHeight(p_display->dis, p_display->screen);
+        p_view->height = p_display->height;
     }
 
     b_result = 1;

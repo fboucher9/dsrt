@@ -55,6 +55,10 @@ struct dsrt_display
 
     int depth;
 
+    int width;
+
+    int height;
+
 }; /* struct dsrt_display */
 
 /* --- Interface --- */

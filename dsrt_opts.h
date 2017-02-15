@@ -1,5 +1,15 @@
 /* See LICENSE for license details. */
 
+/*
+
+Module: dsrt_opts.h
+
+Description:
+
+    Command line options for dsrt application.
+
+*/
+
 /* Reverse include guard */
 #if defined(INC_DSRT_OPTS_H)
 #error include dsrt_opts.h once
@@ -7,6 +17,20 @@
 
 #define INC_DSRT_OPTS_H
 
+/* Predefine context handle */
+struct dsrt_ctxt;
+
+/*
+
+Structure: dsrt_opts
+
+Description:
+
+    Values of all command line options.  An instance of this structure must be
+    accessible via the context handle, so that options are available from
+    each function.
+
+*/
 struct dsrt_opts
 {
     char * * a_filename;
@@ -40,6 +64,8 @@ struct dsrt_opts
 #endif /* #if defined(DSRT_FEATURE_EMBED) */
 
 }; /* struct dsrt_opts */
+
+/* --- Interface --- */
 
 char
 dsrt_opts_init(

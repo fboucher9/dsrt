@@ -47,6 +47,10 @@ dsrt_display_init(
 
         p_display->vis = DefaultVisual(p_display->dis, p_display->screen);
 
+        p_display->width = DisplayWidth(p_display->dis, p_display->screen);
+
+        p_display->height = DisplayHeight(p_display->dis, p_display->screen);
+
         p_display->copyGC = XCreateGC(p_display->dis, p_display->root, 0, NULL);
 
         p_display->red_mask = p_display->vis->red_mask;

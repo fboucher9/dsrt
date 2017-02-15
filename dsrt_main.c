@@ -339,6 +339,18 @@ dsrt_main_show_file(
 
         dsrt_main_select_pixmap_size(p_ctxt, &i_pixmap_width, &i_pixmap_height, &i_image_width, &i_image_height);
 
+#if defined(DSRT_FEATURE_LOG)
+        fprintf(stderr, "        - j %4dx%-4d > i %4dx%-4d > p %4dx%-4d > v %4dx%-4d\n",
+            p_ctxt->p_jpeg->width,
+            p_ctxt->p_jpeg->height,
+            i_image_width,
+            i_image_height,
+            i_pixmap_width,
+            i_pixmap_height,
+            p_ctxt->p_view->width,
+            p_ctxt->p_view->height);
+#endif /* #if defined(DSRT_FEATURE_LOG) */
+
         if (dsrt_pixmap_init(p_ctxt, i_pixmap_width, i_pixmap_height))
         {
             char b_pixmap_cleanup = 1;
@@ -465,12 +477,28 @@ dsrt_main(
 
                 unsigned int i_file_iterator;
 
+                unsigned int i_file_previous;
+
                 i_file_iterator = 0;
+
+                i_file_previous = ~0u;
 
                 c_event = ' ';
 
                 while ('q' != c_event)
                 {
+#if defined(DSRT_FEATURE_LOG)
+                    if (i_file_previous != i_file_iterator)
+                    {
+                        fprintf(stderr, "%3u/%-3u %s\n",
+                            i_file_iterator + 1,
+                            p_ctxt->p_opts->n_files,
+                            p_ctxt->p_opts->a_filename[i_file_iterator]);
+
+                        i_file_previous = i_file_iterator;
+                    }
+#endif /* #if defined(DSRT_FEATURE_LOG) */
+
                     if (dsrt_main_show_file(p_ctxt, p_ctxt->p_opts->a_filename[i_file_iterator]))
                     {
                         /* Wait for event from preview window... */
