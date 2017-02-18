@@ -61,7 +61,11 @@ struct dsrt_main
 static
 void
 dsrt_main_convert_line(
-    struct dsrt_ctxt const * const p_ctxt)
+    struct dsrt_ctxt const * const p_ctxt,
+    signed long int sy1,
+    signed long int fy1,
+    signed long int sy2,
+    signed long int fy2)
 {
     struct dsrt_jpeg * const p_jpeg = p_ctxt->p_jpeg;
 
@@ -73,65 +77,217 @@ dsrt_main_convert_line(
 
     u_int16_t * newBuf16 = (u_int16_t *)(p_ctxt->p_image->img->data);
 
+    JSAMPLE * lb1;
+
+    JSAMPLE * lb2;
+
     signed long int dx;
 
     (void)(p_opts);
+
+    if ((sy1 >= 0) && (sy1 < p_jpeg->height))
+    {
+        lb1 = p_jpeg->lineBuf[sy1];
+    }
+    else
+    {
+        lb1 = NULL;
+    }
+
+    if ((sy2 >= 0) && (sy2 < p_jpeg->height))
+    {
+        lb2 = p_jpeg->lineBuf[sy2];
+    }
+    else
+    {
+        lb2 = NULL;
+    }
 
     /* for all destination pixels */
     for (dx = 0; dx < p_ctxt->p_image->width; dx++)
     {
         u_int32_t col;
+        u_int32_t r1;
+        u_int32_t g1;
+        u_int32_t b1;
+        u_int32_t r2;
+        u_int32_t g2;
+        u_int32_t b2;
+        u_int32_t r3;
+        u_int32_t g3;
+        u_int32_t b3;
+        u_int32_t r4;
+        u_int32_t g4;
+        u_int32_t b4;
+        signed long int frac;
+        signed long int sx1;
+        signed long int sx2;
+        signed long int fx1;
+        signed long int fx2;
 
         /* calculate source position */
-        signed long int sx = ((dx * p_jpeg->width) / p_ctxt->p_image->width);
+        signed long int sx = (((dx * 100 + 50) * p_jpeg->width) / p_ctxt->p_image->width);
 
-        if ((sx >= 0) && (sx < p_jpeg->width))
+        frac = (sx % 100);
+
+        sx /= 100;
+
+        if (frac <= 50)
         {
-            int xr = p_jpeg->xr0 + (sx * p_jpeg->bytesPerPix);
+            sx1 = sx;
 
-            int xg = p_jpeg->xg0 + (sx * p_jpeg->bytesPerPix);
+            sx2 = sx - 1;
 
-            int xb = p_jpeg->xb0 + (sx * p_jpeg->bytesPerPix);
+            fx1 = 50 + frac;
 
-            u_int32_t col_r = (u_int32_t)(p_jpeg->lineBuf[0][xr]);
-
-            u_int32_t col_g = (u_int32_t)(p_jpeg->lineBuf[0][xg]);
-
-            u_int32_t col_b = (u_int32_t)(p_jpeg->lineBuf[0][xb]);
-
-#if defined(DSRT_FEATURE_SHADOW)
-            if (p_opts->b_shadow)
-            {
-                col_r = (col_r * p_opts->i_shadow) / 100u;
-
-                col_g = (col_g * p_opts->i_shadow) / 100u;
-
-                col_b = (col_b * p_opts->i_shadow) / 100u;
-            }
-#endif /* #if defined(DSRT_FEATURE_SHADOW) */
-
-            /* get color of source pixel(s) */
-            col =
-                (u_int32_t)(
-                    ((u_int32_t)(col_r * p_display->rRatio) & p_display->red_mask) |
-                    ((u_int32_t)(col_g * p_display->gRatio) & p_display->green_mask) |
-                    ((u_int32_t)(col_b * p_display->bRatio) & p_display->blue_mask));
+            fx2 = 50 - frac;
         }
         else
         {
-            col =
-                0;
+            sx1 = sx;
+
+            sx2 = sx + 1;
+
+            fx1 = 150 - frac;
+
+            fx2 = frac - 50;
         }
+
+        if ((sx1 >= 0) && (sx1 < p_jpeg->width))
+        {
+            int xr = p_jpeg->xr0 + (sx1 * p_jpeg->bytesPerPix);
+
+            int xg = p_jpeg->xg0 + (sx1 * p_jpeg->bytesPerPix);
+
+            int xb = p_jpeg->xb0 + (sx1 * p_jpeg->bytesPerPix);
+
+            if (lb1)
+            {
+                r1 = (u_int32_t)(lb1[xr]);
+
+                g1 = (u_int32_t)(lb1[xg]);
+
+                b1 = (u_int32_t)(lb1[xb]);
+            }
+            else
+            {
+                r1 = 0;
+
+                g1 = 0;
+
+                b1 = 0;
+            }
+
+            if (lb2)
+            {
+                r2 = (u_int32_t)(lb2[xr]);
+
+                g2 = (u_int32_t)(lb2[xg]);
+
+                b2 = (u_int32_t)(lb2[xb]);
+            }
+            else
+            {
+                r2 = 0;
+
+                g2 = 0;
+
+                b2 = 0;
+            }
+        }
+        else
+        {
+            r1 = r2 = 0;
+
+            g1 = g2 = 0;
+
+            b1 = b2 = 0;
+        }
+
+        if ((sx2 >= 0) && (sx2 < p_jpeg->width))
+        {
+            int xr = p_jpeg->xr0 + (sx2 * p_jpeg->bytesPerPix);
+
+            int xg = p_jpeg->xg0 + (sx2 * p_jpeg->bytesPerPix);
+
+            int xb = p_jpeg->xb0 + (sx2 * p_jpeg->bytesPerPix);
+
+            if (lb1)
+            {
+                r3 = (u_int32_t)(lb1[xr]);
+
+                g3 = (u_int32_t)(lb1[xg]);
+
+                b3 = (u_int32_t)(lb1[xb]);
+            }
+            else
+            {
+                r3 = 0;
+
+                g3 = 0;
+
+                b3 = 0;
+            }
+
+            if (lb2)
+            {
+                r4 = (u_int32_t)(lb2[xr]);
+
+                g4 = (u_int32_t)(lb2[xg]);
+
+                b4 = (u_int32_t)(lb2[xb]);
+            }
+            else
+            {
+                r4 = 0;
+
+                g4 = 0;
+
+                b4 = 0;
+            }
+        }
+        else
+        {
+            r3 = r4 = 0;
+
+            g3 = g4 = 0;
+
+            b3 = b4 = 0;
+        }
+
+        r1 = (r1 * fx1 * fy1 + r2 * fx1 * fy2 + r3 * fx2 * fy1 + r4 * fx2 * fy2) / 100 / 100;
+
+        g1 = (g1 * fx1 * fy1 + g2 * fx1 * fy2 + g3 * fx2 * fy1 + g4 * fx2 * fy2) / 100 / 100;
+
+        b1 = (b1 * fx1 * fy1 + b2 * fx1 * fy2 + b3 * fx2 * fy1 + b4 * fx2 * fy2) / 100 / 100;
+
+#if defined(DSRT_FEATURE_SHADOW)
+        if (p_opts->b_shadow)
+        {
+            r1 = (r1 * p_opts->i_shadow) / 100u;
+
+            g1 = (g1 * p_opts->i_shadow) / 100u;
+
+            b1 = (b1 * p_opts->i_shadow) / 100u;
+        }
+#endif /* #if defined(DSRT_FEATURE_SHADOW) */
+
+        /* get color of source pixel(s) */
+        col =
+            (u_int32_t)(
+                ((u_int32_t)((r1) * p_display->rRatio) & p_display->red_mask) |
+                ((u_int32_t)((g1) * p_display->gRatio) & p_display->green_mask) |
+                ((u_int32_t)((b1) * p_display->bRatio) & p_display->blue_mask));
 
         /* store into destination */
         if (p_display->depth > 16)
         {
-            *newBuf32 += col;
+            *newBuf32 = col;
             ++newBuf32;
         }
         else
         {
-            *newBuf16 += (u_int16_t)(col);
+            *newBuf16 = (u_int16_t)(col);
             ++newBuf16;
         }
     }
@@ -181,13 +337,23 @@ dsrt_main_scan(
 {
     signed long int dy;
 
-    int it;
-
     signed long int sy;
+
+    signed long int frac;
+
+    signed long int sy1;
+
+    signed long int sy2;
+
+    signed long int fy1;
+
+    signed long int fy2;
 
     struct dsrt_jpeg * const p_jpeg = p_ctxt->p_jpeg;
 
-    it = -1;
+    XSetForeground(p_ctxt->p_display->dis, p_ctxt->p_display->copyGC, BlackPixel(p_ctxt->p_display->dis, p_ctxt->p_display->screen));
+
+    XFillRectangle(p_ctxt->p_display->dis, p_ctxt->p_pixmap->pixmap, p_ctxt->p_display->copyGC, 0, 0, p_ctxt->p_pixmap->width, p_ctxt->p_pixmap->height);
 
     for (dy = 0; dy < p_ctxt->p_image->height; ++dy)
     {
@@ -202,29 +368,36 @@ dsrt_main_scan(
         }
 
         /* Calculate srcy */
-        sy = ((dy * p_jpeg->height) / p_ctxt->p_image->height);
+        sy = (((dy * 100 + 50) * p_jpeg->height) / p_ctxt->p_image->height);
 
-        if ((sy >= 0) && ((unsigned int)(sy) < p_jpeg->cinfo.output_height))
+        frac = sy % 100;
+
+        sy /= 100;
+
+        if (frac <= 50)
         {
-            /* Advance into reach srcy */
-            while (it < sy)
-            {
-                it ++;
+            sy1 = sy;
 
-                dsrt_jpeg_read_line(p_ctxt);
-            }
+            sy2 = sy - 1;
 
-            dsrt_main_convert_line(p_ctxt);
+            fy1 = 50 + frac;
 
-            dsrt_main_write_line(p_ctxt, dy);
+            fy2 = 50 - frac;
         }
-    }
+        else
+        {
+            sy1 = sy;
 
-    while ((unsigned int)(it + 1) < p_jpeg->cinfo.output_height)
-    {
-        it ++;
+            sy2 = sy + 1;
 
-        dsrt_jpeg_read_line(p_ctxt);
+            fy1 = 150 - frac;
+
+            fy2 = frac - 50;
+        }
+
+        dsrt_main_convert_line(p_ctxt, sy1, fy1, sy2, fy2);
+
+        dsrt_main_write_line(p_ctxt, dy);
     }
 } /* dsrt_main_scan() */
 

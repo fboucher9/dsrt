@@ -73,7 +73,7 @@ dsrt_jpeg_init(
                 (j_common_ptr) &p_jpeg->cinfo,
                 JPOOL_IMAGE,
                 p_jpeg->lineOffset,
-                1);
+                p_jpeg->cinfo.output_height);
 
         if (3 == p_jpeg->bytesPerPix)
         {
@@ -103,6 +103,18 @@ dsrt_jpeg_init(
 
             b_result = 0;
         }
+
+        if (b_result)
+        {
+            while (p_jpeg->cinfo.output_scanline < p_jpeg->cinfo.output_height)
+            {
+                jpeg_read_scanlines (&p_jpeg->cinfo, &(p_jpeg->lineBuf[p_jpeg->cinfo.output_scanline]), 2);
+            }
+            while (p_jpeg->cinfo.output_scanline < p_jpeg->cinfo.output_height)
+            {
+                jpeg_read_scanlines (&p_jpeg->cinfo, &(p_jpeg->lineBuf[p_jpeg->cinfo.output_scanline]), 1);
+            }
+        }
     }
     else
     {
@@ -129,15 +141,6 @@ dsrt_jpeg_cleanup(
 
         p_jpeg->inFile = NULL;
     }
-}
-
-void
-dsrt_jpeg_read_line(
-    struct dsrt_ctxt const * const p_ctxt)
-{
-    struct dsrt_jpeg * const p_jpeg = p_ctxt->p_jpeg;
-
-    jpeg_read_scanlines (&p_jpeg->cinfo, p_jpeg->lineBuf, 1);
 }
 
 /* end-of-file: dsrt_jpeg.c */
