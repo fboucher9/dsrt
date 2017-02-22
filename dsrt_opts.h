@@ -45,7 +45,13 @@ struct dsrt_opts
 
     unsigned int n_files;
 
+    unsigned int i_width;
+
+    unsigned int i_height;
+
     char b_fit;
+
+    char b_geometry;
 
 #if defined(DSRT_FEATURE_SHADOW)
     char b_shadow;

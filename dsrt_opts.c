@@ -133,6 +133,29 @@ dsrt_opts_init(
                     argi ++;
                 }
                 else
+                if ((0 == strcmp(argv[argi], "--geom"))
+                    || (0 == strcmp(argv[argi], "-g")))
+                {
+                    argi ++;
+
+                    if (argi < argc)
+                    {
+                        sscanf(argv[argi], "%ux%u", &p_opts->i_width, &p_opts->i_height);
+
+                        p_opts->b_geometry = 1;
+
+                        argi ++;
+                    }
+                    else
+                    {
+#if defined(DSRT_FEATURE_LOG)
+                        fprintf(stderr, "missing geometry argument\n");
+#endif /* #if defined(DSRT_FEATURE_LOG) */
+
+                        b_result = 0;
+                    }
+                }
+                else
                 if (0 == strcmp(argv[argi], "--"))
                 {
                     argi ++;

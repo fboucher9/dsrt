@@ -50,6 +50,10 @@ dsrt_view_init(
     {
         Window i_parent;
 
+        int i_parent_width;
+
+        int i_parent_height;
+
 #if defined(DSRT_FEATURE_EMBED)
         if (p_opts->b_embed)
         {
@@ -61,9 +65,22 @@ dsrt_view_init(
 
             XGetWindowAttributes(p_display->dis, i_parent, &wa);
 
-            p_view->width = wa.width;
+            i_parent_width = wa.width;
 
-            p_view->height = wa.height;
+            i_parent_height = wa.height;
+
+            if (p_opts->b_geometry)
+            {
+                p_view->width = p_opts->i_width;
+
+                p_view->height = p_opts->i_height;
+            }
+            else
+            {
+                p_view->width = wa.width;
+
+                p_view->height = wa.height;
+            }
 
             XSelectInput(
                 p_display->dis,
@@ -75,16 +92,29 @@ dsrt_view_init(
         {
             i_parent = p_display->root;
 
-            p_view->width = 1024;
+            i_parent_width = p_display->width;
 
-            p_view->height = 768;
+            i_parent_height = p_display->height;
+
+            if (p_opts->b_geometry)
+            {
+                p_view->width = p_opts->i_width;
+
+                p_view->height = p_opts->i_height;
+            }
+            else
+            {
+                p_view->width = 1024;
+
+                p_view->height = 768;
+            }
         }
 
         p_view->h = XCreateSimpleWindow(
             p_display->dis,
             i_parent,
-            0,
-            0,
+            (i_parent_width - p_view->width) / 2,
+            (i_parent_height - p_view->height) / 2,
             p_view->width,
             p_view->height,
             0,
@@ -105,9 +135,18 @@ dsrt_view_init(
     {
         p_view->h = p_display->root;
 
-        p_view->width = p_display->width;
+        if (p_opts->b_geometry)
+        {
+            p_view->width = p_opts->i_width;
 
-        p_view->height = p_display->height;
+            p_view->height = p_opts->i_height;
+        }
+        else
+        {
+            p_view->width = p_display->width;
+
+            p_view->height = p_display->height;
+        }
     }
 
     b_result = 1;
@@ -204,11 +243,22 @@ dsrt_view_event(
 
                         memset(&wc, 0, sizeof(wc));
 
-                        wc.width = o_event.xconfigure.width;
+                        if (p_opts->b_geometry)
+                        {
+                            wc.x = (o_event.xconfigure.width - p_view->width) / 2;
 
-                        wc.height = o_event.xconfigure.height;
+                            wc.y = (o_event.xconfigure.height - p_view->height) / 2;
 
-                        XConfigureWindow(p_display->dis, p_view->h, CWWidth|CWHeight, &wc);
+                            XConfigureWindow(p_display->dis, p_view->h, CWX|CWY, &wc);
+                        }
+                        else
+                        {
+                            wc.width = o_event.xconfigure.width;
+
+                            wc.height = o_event.xconfigure.height;
+
+                            XConfigureWindow(p_display->dis, p_view->h, CWWidth|CWHeight, &wc);
+                        }
                     }
                     else if (o_event.xconfigure.window == p_view->h)
                     {

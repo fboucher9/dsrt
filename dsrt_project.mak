@@ -14,7 +14,7 @@ endif
 
 DSRT_CFLAGS_chk = -g -O0
 
-DSRT_CFLAGS_fre = -O2
+DSRT_CFLAGS_fre = -O2 -Os
 
 DSRT_CFLAGS = $(CFLAGS) $(DSRT_CFLAGS_$(DSRT_CFG_DBG)) -pedantic -Wall -Wextra -I$(DSRT_DST_PATH)
 
