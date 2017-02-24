@@ -49,9 +49,19 @@ struct dsrt_opts
 
     unsigned int i_height;
 
+    int i_zoom_x1;
+
+    int i_zoom_y1;
+
+    int i_zoom_x2;
+
+    int i_zoom_y2;
+
     char b_fit;
 
     char b_geometry;
+
+    char b_zoom;
 
 #if defined(DSRT_FEATURE_SHADOW)
     char b_shadow;

@@ -37,6 +37,9 @@ Description:
 /* View */
 #include "dsrt_view.h"
 
+/* Zoom */
+#include "dsrt_zoom.h"
+
 /* Module */
 #include "dsrt_main.h"
 
@@ -56,6 +59,8 @@ struct dsrt_main
 
     struct dsrt_view o_view;
 
+    struct dsrt_zoom o_zoom;
+
 };
 
 static
@@ -73,6 +78,8 @@ dsrt_main_convert_line(
 
     struct dsrt_opts const * const p_opts = p_ctxt->p_opts;
 
+    struct dsrt_zoom const * const p_zoom = p_ctxt->p_zoom;
+
     u_int32_t * newBuf32 = (u_int32_t *)(p_ctxt->p_image->img->data);
 
     u_int16_t * newBuf16 = (u_int16_t *)(p_ctxt->p_image->img->data);
@@ -82,6 +89,10 @@ dsrt_main_convert_line(
     JSAMPLE * lb2;
 
     signed long int dx;
+
+    int i_source_x1;
+
+    int i_source_width;
 
     (void)(p_opts);
 
@@ -102,6 +113,10 @@ dsrt_main_convert_line(
     {
         lb2 = NULL;
     }
+
+    i_source_x1 = p_zoom->x1;
+
+    i_source_width = p_zoom->x2 - p_zoom->x1;
 
     /* for all destination pixels */
     for (dx = 0; dx < p_ctxt->p_image->width; dx++)
@@ -126,11 +141,13 @@ dsrt_main_convert_line(
         signed long int fx2;
 
         /* calculate source position */
-        signed long int sx = (((dx * 100 + 50) * p_jpeg->width) / p_ctxt->p_image->width);
+        signed long int sx = (((dx * 100 + 50) * i_source_width) / p_ctxt->p_image->width);
 
         frac = (sx % 100);
 
         sx /= 100;
+
+        sx += i_source_x1;
 
         if (frac <= 50)
         {
@@ -349,11 +366,19 @@ dsrt_main_scan(
 
     signed long int fy2;
 
-    struct dsrt_jpeg * const p_jpeg = p_ctxt->p_jpeg;
+    struct dsrt_zoom const * const p_zoom = p_ctxt->p_zoom;
+
+    int i_source_y1;
+
+    int i_source_height;
 
     XSetForeground(p_ctxt->p_display->dis, p_ctxt->p_display->copyGC, BlackPixel(p_ctxt->p_display->dis, p_ctxt->p_display->screen));
 
     XFillRectangle(p_ctxt->p_display->dis, p_ctxt->p_pixmap->pixmap, p_ctxt->p_display->copyGC, 0, 0, p_ctxt->p_pixmap->width, p_ctxt->p_pixmap->height);
+
+    i_source_y1 = p_zoom->y1;
+
+    i_source_height = p_zoom->y2 - p_zoom->y1;
 
     for (dy = 0; dy < p_ctxt->p_image->height; ++dy)
     {
@@ -368,11 +393,13 @@ dsrt_main_scan(
         }
 
         /* Calculate srcy */
-        sy = (((dy * 100 + 50) * p_jpeg->height) / p_ctxt->p_image->height);
+        sy = (((dy * 100 + 50) * i_source_height) / p_ctxt->p_image->height);
 
         frac = sy % 100;
 
         sy /= 100;
+
+        sy += i_source_y1;
 
         if (frac <= 50)
         {
@@ -422,9 +449,9 @@ dsrt_main_select_pixmap_size(
 {
     struct dsrt_opts const * const p_opts = p_ctxt->p_opts;
 
-    struct dsrt_jpeg const * const p_jpeg = p_ctxt->p_jpeg;
-
     struct dsrt_view const * const p_view = p_ctxt->p_view;
+
+    struct dsrt_zoom const * const p_zoom = p_ctxt->p_zoom;
 
     int i_pixmap_width;
 
@@ -434,6 +461,14 @@ dsrt_main_select_pixmap_size(
 
     int i_image_height;
 
+    int i_source_width;
+
+    int i_source_height;
+
+    i_source_width = p_zoom->x2 - p_zoom->x1;
+
+    i_source_height = p_zoom->y2 - p_zoom->y1;
+
 #if defined(DSRT_FEATURE_CENTER)
     if (p_opts->b_center)
     {
@@ -441,9 +476,9 @@ dsrt_main_select_pixmap_size(
 
         i_pixmap_height = p_view->height;
 
-        i_image_width = p_jpeg->width;
+        i_image_width = i_source_width;
 
-        i_image_height = p_jpeg->height;
+        i_image_height = i_source_height;
     }
     else
 #endif /* #if defined(DSRT_FEATURE_CENTER) */
@@ -455,11 +490,11 @@ dsrt_main_select_pixmap_size(
 
             i_pixmap_height = p_view->height;
 
-            i_image_height = ((p_jpeg->height * i_pixmap_width) / p_jpeg->width);
+            i_image_height = ((i_source_height * i_pixmap_width) / i_source_width);
 
             if (i_image_height > i_pixmap_height)
             {
-                i_image_width = ((p_jpeg->width * i_pixmap_height) / p_jpeg->height);
+                i_image_width = ((i_source_width * i_pixmap_height) / i_source_height);
 
                 i_image_height = i_pixmap_height;
             }
@@ -470,9 +505,9 @@ dsrt_main_select_pixmap_size(
         }
         else
         {
-            i_pixmap_width = p_jpeg->width;
+            i_pixmap_width = i_source_width;
 
-            i_pixmap_height = p_jpeg->height;
+            i_pixmap_height = i_source_height;
 
             i_image_width = i_pixmap_width;
 
@@ -493,74 +528,47 @@ dsrt_main_select_pixmap_size(
 static
 char
 dsrt_main_show_file(
-    struct dsrt_ctxt const * const p_ctxt,
-    char const * const p_filename)
+    struct dsrt_ctxt const * const p_ctxt)
 {
     char b_result;
 
-    if (dsrt_jpeg_init(p_ctxt, p_filename))
+    int i_pixmap_width;
+
+    int i_pixmap_height;
+
+    int i_image_width;
+
+    int i_image_height;
+
+    dsrt_zoom_setup(p_ctxt, p_ctxt->p_jpeg->width, p_ctxt->p_jpeg->height);
+
+    dsrt_main_select_pixmap_size(p_ctxt, &i_pixmap_width, &i_pixmap_height, &i_image_width, &i_image_height);
+
+#if defined(DSRT_FEATURE_LOG)
+    fprintf(stderr, "        - j %4dx%-4d > z %4dx%-4d > i %4dx%-4d > p %4dx%-4d > v %4dx%-4d\n",
+        p_ctxt->p_jpeg->width,
+        p_ctxt->p_jpeg->height,
+        (int)(p_ctxt->p_zoom->x2 - p_ctxt->p_zoom->x1),
+        (int)(p_ctxt->p_zoom->y2 - p_ctxt->p_zoom->y1),
+        i_image_width,
+        i_image_height,
+        i_pixmap_width,
+        i_pixmap_height,
+        p_ctxt->p_view->width,
+        p_ctxt->p_view->height);
+#endif /* #if defined(DSRT_FEATURE_LOG) */
+
+    if (dsrt_pixmap_init(p_ctxt, i_pixmap_width, i_pixmap_height))
     {
-        char b_jpeg_cleanup = 1;
+        char b_pixmap_cleanup = 1;
 
-        int i_pixmap_width;
-
-        int i_pixmap_height;
-
-        int i_image_width;
-
-        int i_image_height;
-
-        dsrt_main_select_pixmap_size(p_ctxt, &i_pixmap_width, &i_pixmap_height, &i_image_width, &i_image_height);
-
-#if defined(DSRT_FEATURE_LOG)
-        fprintf(stderr, "        - j %4dx%-4d > i %4dx%-4d > p %4dx%-4d > v %4dx%-4d\n",
-            p_ctxt->p_jpeg->width,
-            p_ctxt->p_jpeg->height,
-            i_image_width,
-            i_image_height,
-            i_pixmap_width,
-            i_pixmap_height,
-            p_ctxt->p_view->width,
-            p_ctxt->p_view->height);
-#endif /* #if defined(DSRT_FEATURE_LOG) */
-
-        if (dsrt_pixmap_init(p_ctxt, i_pixmap_width, i_pixmap_height))
+        if (dsrt_image_init(p_ctxt, i_image_width, i_image_height))
         {
-            char b_pixmap_cleanup = 1;
+            dsrt_main_scan(p_ctxt);
 
-            if (dsrt_image_init(p_ctxt, i_image_width, i_image_height))
-            {
-                dsrt_main_scan(p_ctxt);
+            dsrt_image_cleanup(p_ctxt);
 
-                dsrt_image_cleanup(p_ctxt);
-
-                if (b_jpeg_cleanup)
-                {
-                    dsrt_jpeg_cleanup(p_ctxt);
-
-                    b_jpeg_cleanup = 0;
-                }
-
-                dsrt_pixmap_apply(p_ctxt);
-
-                if (b_pixmap_cleanup)
-                {
-                    dsrt_pixmap_cleanup(p_ctxt);
-
-                    b_pixmap_cleanup = 0;
-                }
-
-                /* Launch a viewer... */
-                b_result = 1;
-            }
-            else
-            {
-#if defined(DSRT_FEATURE_LOG)
-                fprintf(stderr, "error out of memory\n");
-#endif /* #if defined(DSRT_FEATURE_LOG) */
-
-                b_result = 0;
-            }
+            dsrt_pixmap_apply(p_ctxt);
 
             if (b_pixmap_cleanup)
             {
@@ -568,25 +576,28 @@ dsrt_main_show_file(
 
                 b_pixmap_cleanup = 0;
             }
+
+            /* Launch a viewer... */
+            b_result = 1;
         }
         else
         {
+#if defined(DSRT_FEATURE_LOG)
+            fprintf(stderr, "error out of memory\n");
+#endif /* #if defined(DSRT_FEATURE_LOG) */
+
             b_result = 0;
         }
 
-        if (b_jpeg_cleanup)
+        if (b_pixmap_cleanup)
         {
-            dsrt_jpeg_cleanup(p_ctxt);
+            dsrt_pixmap_cleanup(p_ctxt);
 
-            b_jpeg_cleanup = 0;
+            b_pixmap_cleanup = 0;
         }
     }
     else
     {
-#if defined(DSRT_FEATURE_LOG)
-        fprintf(stderr, "error\n");
-#endif /* #if defined(DSRT_FEATURE_LOG) */
-
         b_result = 0;
     }
 
@@ -614,6 +625,8 @@ dsrt_main_init_ctxt(
     p_ctxt->p_pixmap = &p_main->o_pixmap;
 
     p_ctxt->p_view = &p_main->o_view;
+
+    p_ctxt->p_zoom = &p_main->o_zoom;
 
 } /* dsrt_main_init_ctxt() */
 
@@ -643,10 +656,15 @@ dsrt_main(
     {
         if (dsrt_opts_init(p_ctxt, argc, argv))
         {
+            /* Create a zoom object */
+            dsrt_zoom_init(p_ctxt);
+
             /* Create a preview window */
             if (dsrt_view_init(p_ctxt))
             {
                 char c_event;
+
+                char b_jpeg_cleanup;
 
                 unsigned int i_file_iterator;
 
@@ -658,40 +676,77 @@ dsrt_main(
 
                 c_event = ' ';
 
+                b_jpeg_cleanup = 0;
+
                 while ('q' != c_event)
                 {
-#if defined(DSRT_FEATURE_LOG)
+                    char b_result;
+
+                    char const * p_filename = p_ctxt->p_opts->a_filename[i_file_iterator];
+
                     if (i_file_previous != i_file_iterator)
                     {
+#if defined(DSRT_FEATURE_LOG)
                         fprintf(stderr, "%3u/%-3u %s\n",
                             i_file_iterator + 1,
                             p_ctxt->p_opts->n_files,
                             p_ctxt->p_opts->a_filename[i_file_iterator]);
-
-                        i_file_previous = i_file_iterator;
-                    }
 #endif /* #if defined(DSRT_FEATURE_LOG) */
 
-                    if (dsrt_main_show_file(p_ctxt, p_ctxt->p_opts->a_filename[i_file_iterator]))
-                    {
-                        /* Wait for event from preview window... */
-                        c_event = dsrt_view_event(p_ctxt);
+                        if (b_jpeg_cleanup)
+                        {
+                            dsrt_jpeg_cleanup(p_ctxt);
 
-                        if ('n' == c_event)
-                        {
-                            i_file_iterator ++;
-                            if (i_file_iterator >= p_ctxt->p_opts->n_files)
-                            {
-                                i_file_iterator = 0;
-                            }
+                            b_jpeg_cleanup = 0;
                         }
-                        else if ('p' == c_event)
+
+                        b_result = dsrt_jpeg_init(p_ctxt, p_filename);
+
+                        if (b_result)
                         {
-                            if (0 == i_file_iterator)
+                            b_jpeg_cleanup = 1;
+
+                            i_file_previous = i_file_iterator;
+                        }
+                        else
+                        {
+                            i_file_previous = ~0u;
+                        }
+                    }
+                    else
+                    {
+                        b_result = 1;
+                    }
+
+                    if (b_result)
+                    {
+                        if (dsrt_main_show_file(p_ctxt))
+                        {
+                            /* Wait for event from preview window... */
+                            c_event = dsrt_view_event(p_ctxt);
+
+                            if ('n' == c_event)
                             {
-                                i_file_iterator = p_ctxt->p_opts->n_files;
+                                i_file_iterator ++;
+                                if (i_file_iterator >= p_ctxt->p_opts->n_files)
+                                {
+                                    i_file_iterator = 0;
+                                }
                             }
-                            i_file_iterator --;
+                            else if ('p' == c_event)
+                            {
+                                if (0 == i_file_iterator)
+                                {
+                                    i_file_iterator = p_ctxt->p_opts->n_files;
+                                }
+                                i_file_iterator --;
+                            }
+
+                            dsrt_zoom_event(p_ctxt, c_event);
+                        }
+                        else
+                        {
+                            c_event = 'q';
                         }
                     }
                     else

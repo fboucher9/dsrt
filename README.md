@@ -32,15 +32,6 @@ Use the following command-line syntax to invoke the `dsrt` application:
         dsrt [options] <files>
 
 
-## Examples
-
-
-To display the file `wallpaper.jpg` on root window, use the following command:
-
-
-        dsrt wallpaper.jpg
-
-
 ## Options
 
 
@@ -49,7 +40,7 @@ The following command-line options are supported by the `dsrt` application:
 
 *-c*|*--center*  Center image in view
 
-*-p*|*--preview*  Preview image in a child window
+*-v*|*--preview*  Preview image in a child window
 
 *-e*|*--embed*  Embed image into parent window
 
@@ -60,6 +51,31 @@ The following command-line options are supported by the `dsrt` application:
 *-s*|*--shadow*  Blend image with black background
 
 *--*  Mark the end of options, all following arguments are files
+
+
+## Keyboard
+
+
+**q**  Quit the preview or embedded window
+
+**space**  View the next image
+
+**backspace** View the previous image
+
+
+## Examples
+
+
+To display the file `wallpaper.jpg` on root window, use the following command:
+
+
+        dsrt wallpaper.jpg
+
+
+To preview all jpeg images in current folder in a child window, stretched to fit, use the following command:
+
+
+        dsrt -v -f *.jpg
 
 
 ## Environment
@@ -75,4 +91,7 @@ See CREDITS for more information.
 
 - Support for bicubic filtering
 - Support for other image file formats
+- Support for mirror
+- Support for rotate
+- Support for gray scale
 

@@ -234,6 +234,90 @@ dsrt_view_event(
 
                         b_continue = 0;
                     }
+                    else if (XK_0 == ks)
+                    {
+                        c_event = '0';
+
+                        b_continue = 0;
+                    }
+                    else if (XK_1 == ks)
+                    {
+                        c_event = '1';
+
+                        b_continue = 0;
+                    }
+                    else if (XK_2 == ks)
+                    {
+                        c_event = '2';
+
+                        b_continue = 0;
+                    }
+                    else if (XK_3 == ks)
+                    {
+                        c_event = '3';
+
+                        b_continue = 0;
+                    }
+                    else if (XK_4 == ks)
+                    {
+                        c_event = '4';
+
+                        b_continue = 0;
+                    }
+                    else if (XK_5 == ks)
+                    {
+                        c_event = '5';
+
+                        b_continue = 0;
+                    }
+                    else if (XK_6 == ks)
+                    {
+                        c_event = '6';
+
+                        b_continue = 0;
+                    }
+                    else if (XK_7 == ks)
+                    {
+                        c_event = '7';
+
+                        b_continue = 0;
+                    }
+                    else if (XK_8 == ks)
+                    {
+                        c_event = '8';
+
+                        b_continue = 0;
+                    }
+                    else if (XK_9 == ks)
+                    {
+                        c_event = '9';
+
+                        b_continue = 0;
+                    }
+                    else if (XK_w == ks)
+                    {
+                        c_event = 'w';
+
+                        b_continue = 0;
+                    }
+                    else if (XK_a == ks)
+                    {
+                        c_event = 'a';
+
+                        b_continue = 0;
+                    }
+                    else if (XK_s == ks)
+                    {
+                        c_event = 's';
+
+                        b_continue = 0;
+                    }
+                    else if (XK_d == ks)
+                    {
+                        c_event = 'd';
+
+                        b_continue = 0;
+                    }
                 }
                 else if (ConfigureNotify == o_event.type)
                 {

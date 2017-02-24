@@ -156,6 +156,43 @@ dsrt_opts_init(
                     }
                 }
                 else
+                if ((0 == strcmp(argv[argi], "--zoom"))
+                    || (0 == strcmp(argv[argi], "-z")))
+                {
+                    argi ++;
+
+                    if (argi < argc)
+                    {
+                        sscanf(argv[argi], "%dx%d+%d+%d",
+                            &p_opts->i_zoom_x2,
+                            &p_opts->i_zoom_y2,
+                            &p_opts->i_zoom_x1,
+                            &p_opts->i_zoom_y1);
+
+                        p_opts->i_zoom_x2 += p_opts->i_zoom_x1;
+
+                        p_opts->i_zoom_y2 += p_opts->i_zoom_y1;
+
+                        p_opts->b_zoom = 1;
+
+                        if (p_opts->i_zoom_x2 <= p_opts->i_zoom_x1)
+                        {
+                            p_opts->i_zoom_x2 = p_opts->i_zoom_x1 + 1;
+                        }
+
+                        if (p_opts->i_zoom_y2 <= p_opts->i_zoom_y1)
+                        {
+                            p_opts->i_zoom_y2 = p_opts->i_zoom_y1 + 1;
+                        }
+
+                        argi ++;
+                    }
+                    else
+                    {
+                        b_result = 0;
+                    }
+                }
+                else
                 if (0 == strcmp(argv[argi], "--"))
                 {
                     argi ++;
@@ -211,7 +248,9 @@ dsrt_opts_init(
             "  -v --preview    Preview image in a child window\n"
             "  -e --embed      Preview image embedded into parent\n"
             "  -f --fit        Stretch to fir into window\n"
-            "  -s --shadow     Blend image with black\n");
+            "  -s --shadow     Blend image with black\n"
+            "  -g --geom       Size of view\n"
+            "  -z --zoom       Zoom to rectangle in source\n");
     }
 #endif /* #if defined(DSRT_FEATURE_LOG) */
 

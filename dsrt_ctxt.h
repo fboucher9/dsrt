@@ -43,6 +43,9 @@ struct dsrt_pixmap;
 /* Predefine pointer to module */
 struct dsrt_view;
 
+/* Predefine pointer to module */
+struct dsrt_zoom;
+
 /* Context */
 struct dsrt_ctxt
 {
@@ -59,6 +62,8 @@ struct dsrt_ctxt
     struct dsrt_pixmap * p_pixmap;
 
     struct dsrt_view * p_view;
+
+    struct dsrt_zoom * p_zoom;
 
 }; /* struct dsrt_ctxt */
 
