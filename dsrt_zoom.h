@@ -17,6 +17,11 @@ Description:
 
 #define INC_DSRT_ZOOM_H
 
+/* Verify configuration */
+#if !defined(DSRT_FEATURE_ZOOM)
+#error zoom feature disabled
+#endif /* #if !defined(DSRT_FEATURE_ZOOM) */
+
 /*
 
 Structure: dsrt_zoom

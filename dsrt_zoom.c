@@ -16,6 +16,8 @@ Description:
 /* Configuration */
 #include "dsrt_cfg.h"
 
+#if defined(DSRT_FEATURE_ZOOM)
+
 /* Context */
 #include "dsrt_ctxt.h"
 
@@ -313,5 +315,7 @@ dsrt_zoom_event(
         p_zoom->y2 = -1;
     }
 } /* dsrt_zoom_event() */
+
+#endif /* #if defined(DSRT_FEATURE_ZOOM) */
 
 /* end-of-file: dsrt_zoom.c */

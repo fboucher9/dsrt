@@ -38,7 +38,9 @@ Description:
 #include "dsrt_view.h"
 
 /* Zoom */
+#if defined(DSRT_FEATURE_ZOOM)
 #include "dsrt_zoom.h"
+#endif /* #if defined(DSRT_FEATURE_ZOOM) */
 
 /* Module */
 #include "dsrt_main.h"
@@ -59,7 +61,9 @@ struct dsrt_main
 
     struct dsrt_view o_view;
 
+#if defined(DSRT_FEATURE_ZOOM)
     struct dsrt_zoom o_zoom;
+#endif /* #if defined(DSRT_FEATURE_ZOOM) */
 
 };
 
@@ -78,7 +82,9 @@ dsrt_main_convert_line(
 
     struct dsrt_opts const * const p_opts = p_ctxt->p_opts;
 
+#if defined(DSRT_FEATURE_ZOOM)
     struct dsrt_zoom const * const p_zoom = p_ctxt->p_zoom;
+#endif /* #if defined(DSRT_FEATURE_ZOOM) */
 
     u_int32_t * newBuf32 = (u_int32_t *)(p_ctxt->p_image->img->data);
 
@@ -114,9 +120,15 @@ dsrt_main_convert_line(
         lb2 = NULL;
     }
 
+#if defined(DSRT_FEATURE_ZOOM)
     i_source_x1 = p_zoom->x1;
 
     i_source_width = p_zoom->x2 - p_zoom->x1;
+#else /* #if defined(DSRT_FEATURE_ZOOM) */
+    i_source_x1 = 0;
+
+    i_source_width = p_jpeg->width;
+#endif /* #if defined(DSRT_FEATURE_ZOOM) */
 
     /* for all destination pixels */
     for (dx = 0; dx < p_ctxt->p_image->width; dx++)
@@ -366,7 +378,9 @@ dsrt_main_scan(
 
     signed long int fy2;
 
+#if defined(DSRT_FEATURE_ZOOM)
     struct dsrt_zoom const * const p_zoom = p_ctxt->p_zoom;
+#endif /* #if defined(DSRT_FEATURE_ZOOM) */
 
     int i_source_y1;
 
@@ -376,9 +390,15 @@ dsrt_main_scan(
 
     XFillRectangle(p_ctxt->p_display->dis, p_ctxt->p_pixmap->pixmap, p_ctxt->p_display->copyGC, 0, 0, p_ctxt->p_pixmap->width, p_ctxt->p_pixmap->height);
 
+#if defined(DSRT_FEATURE_ZOOM)
     i_source_y1 = p_zoom->y1;
 
     i_source_height = p_zoom->y2 - p_zoom->y1;
+#else /* #if defined(DSRT_FEATURE_ZOOM) */
+    i_source_y1 = 0;
+
+    i_source_height = p_ctxt->p_jpeg->height;
+#endif /* #if defined(DSRT_FEATURE_ZOOM) */
 
     for (dy = 0; dy < p_ctxt->p_image->height; ++dy)
     {
@@ -451,7 +471,9 @@ dsrt_main_select_pixmap_size(
 
     struct dsrt_view const * const p_view = p_ctxt->p_view;
 
+#if defined(DSRT_FEATURE_ZOOM)
     struct dsrt_zoom const * const p_zoom = p_ctxt->p_zoom;
+#endif /* #if defined(DSRT_FEATURE_ZOOM) */
 
     int i_pixmap_width;
 
@@ -465,9 +487,15 @@ dsrt_main_select_pixmap_size(
 
     int i_source_height;
 
+#if defined(DSRT_FEATURE_ZOOM)
     i_source_width = p_zoom->x2 - p_zoom->x1;
 
     i_source_height = p_zoom->y2 - p_zoom->y1;
+#else /* #if defined(DSRT_FEATURE_ZOOM) */
+    i_source_width = p_ctxt->p_jpeg->width;
+
+    i_source_height = p_ctxt->p_jpeg->height;
+#endif /* #if defined(DSRT_FEATURE_ZOOM) */
 
 #if defined(DSRT_FEATURE_CENTER)
     if (p_opts->b_center)
@@ -540,12 +568,15 @@ dsrt_main_show_file(
 
     int i_image_height;
 
+#if defined(DSRT_FEATURE_ZOOM)
     dsrt_zoom_setup(p_ctxt, p_ctxt->p_jpeg->width, p_ctxt->p_jpeg->height);
+#endif /* #if defined(DSRT_FEATURE_ZOOM) */
 
     dsrt_main_select_pixmap_size(p_ctxt, &i_pixmap_width, &i_pixmap_height, &i_image_width, &i_image_height);
 
 #if defined(DSRT_FEATURE_LOG)
     {
+#if defined(DSRT_FEATURE_ZOOM)
         char a_zoom[32];
 
         sprintf(a_zoom, "%ldx%ld+%ld+%ld",
@@ -553,11 +584,20 @@ dsrt_main_show_file(
             p_ctxt->p_zoom->y2 - p_ctxt->p_zoom->y1,
             p_ctxt->p_zoom->x1,
             p_ctxt->p_zoom->y1);
+#endif /* #if defined(DSRT_FEATURE_ZOOM) */
 
-        fprintf(stderr, "        - j %4dx%-4d > z %-20s > i %4dx%-4d > p %4dx%-4d > v %4dx%-4d\n",
+        fprintf(stderr, "        - j %4dx%-4d "
+#if defined(DSRT_FEATURE_ZOOM)
+            "> z %-20s "
+#endif /* #if defined(DSRT_FEATURE_ZOOM) */
+            "> i %4dx%-4d "
+            "> p %4dx%-4d "
+            "> v %4dx%-4d\n",
             p_ctxt->p_jpeg->width,
             p_ctxt->p_jpeg->height,
+#if defined(DSRT_FEATURE_ZOOM)
             a_zoom,
+#endif /* #if defined(DSRT_FEATURE_ZOOM) */
             i_image_width,
             i_image_height,
             i_pixmap_width,
@@ -635,7 +675,9 @@ dsrt_main_init_ctxt(
 
     p_ctxt->p_view = &p_main->o_view;
 
+#if defined(DSRT_FEATURE_ZOOM)
     p_ctxt->p_zoom = &p_main->o_zoom;
+#endif /* #if defined(DSRT_FEATURE_ZOOM) */
 
 } /* dsrt_main_init_ctxt() */
 
@@ -666,7 +708,9 @@ dsrt_main(
         if (dsrt_opts_init(p_ctxt, argc, argv))
         {
             /* Create a zoom object */
+#if defined(DSRT_FEATURE_ZOOM)
             dsrt_zoom_init(p_ctxt);
+#endif /* #if defined(DSRT_FEATURE_ZOOM) */
 
             /* Create a preview window */
             if (dsrt_view_init(p_ctxt))
@@ -759,7 +803,9 @@ dsrt_main(
                                 i_file_iterator --;
                             }
 
+#if defined(DSRT_FEATURE_ZOOM)
                             dsrt_zoom_event(p_ctxt, c_event, i_mouse_x, i_mouse_y);
+#endif /* #if defined(DSRT_FEATURE_ZOOM) */
                         }
                         else
                         {

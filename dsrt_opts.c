@@ -133,6 +133,7 @@ dsrt_opts_init(
                     argi ++;
                 }
                 else
+#if defined(DSRT_FEATURE_GEOM)
                 if ((0 == strcmp(argv[argi], "--geom"))
                     || (0 == strcmp(argv[argi], "-g")))
                 {
@@ -156,6 +157,8 @@ dsrt_opts_init(
                     }
                 }
                 else
+#endif /* #if defined(DSRT_FEATURE_GEOM) */
+#if defined(DSRT_FEATURE_ZOOM)
                 if ((0 == strcmp(argv[argi], "--zoom"))
                     || (0 == strcmp(argv[argi], "-z")))
                 {
@@ -193,6 +196,7 @@ dsrt_opts_init(
                     }
                 }
                 else
+#endif /* #if defined(DSRT_FEATURE_ZOOM) */
                 if (0 == strcmp(argv[argi], "--"))
                 {
                     argi ++;

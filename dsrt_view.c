@@ -69,6 +69,7 @@ dsrt_view_init(
 
             i_parent_height = wa.height;
 
+#if defined(DSRT_FEATURE_GEOM)
             if (p_opts->b_geometry)
             {
                 p_view->width = p_opts->i_width;
@@ -76,6 +77,7 @@ dsrt_view_init(
                 p_view->height = p_opts->i_height;
             }
             else
+#endif /* #if defined(DSRT_FEATURE_GEOM) */
             {
                 p_view->width = wa.width;
 
@@ -96,6 +98,7 @@ dsrt_view_init(
 
             i_parent_height = p_display->height;
 
+#if defined(DSRT_FEATURE_GEOM)
             if (p_opts->b_geometry)
             {
                 p_view->width = p_opts->i_width;
@@ -103,6 +106,7 @@ dsrt_view_init(
                 p_view->height = p_opts->i_height;
             }
             else
+#endif /* #if defined(DSRT_FEATURE_GEOM) */
             {
                 p_view->width = 1024;
 
@@ -135,6 +139,7 @@ dsrt_view_init(
     {
         p_view->h = p_display->root;
 
+#if defined(DSRT_FEATURE_GEOM)
         if (p_opts->b_geometry)
         {
             p_view->width = p_opts->i_width;
@@ -142,6 +147,7 @@ dsrt_view_init(
             p_view->height = p_opts->i_height;
         }
         else
+#endif /* #if defined(DSRT_FEATURE_GEOM) */
         {
             p_view->width = p_display->width;
 
@@ -236,6 +242,7 @@ dsrt_view_event(
 
                         b_continue = 0;
                     }
+#if defined(DSRT_FEATURE_ZOOM)
                     else if (XK_Return == ks)
                     {
                         c_event = '=';
@@ -278,11 +285,13 @@ dsrt_view_event(
 
                         b_continue = 0;
                     }
+#endif /* #if defined(DSRT_FEATURE_ZOOM) */
 
                     *p_mouse_x = o_event.xkey.x;
 
                     *p_mouse_y = o_event.xkey.y;
                 }
+#if defined(DSRT_FEATURE_ZOOM)
                 else if (ButtonPress == o_event.type)
                 {
                     if (Button1 == o_event.xbutton.button)
@@ -304,6 +313,7 @@ dsrt_view_event(
 
                     b_continue = 0;
                 }
+#endif /* #if defined(DSRT_FEATURE_ZOOM) */
                 else if (ConfigureNotify == o_event.type)
                 {
                     if (o_event.xconfigure.window == p_opts->i_embed)
@@ -312,6 +322,7 @@ dsrt_view_event(
 
                         memset(&wc, 0, sizeof(wc));
 
+#if defined(DSRT_FEATURE_GEOM)
                         if (p_opts->b_geometry)
                         {
                             wc.x = (o_event.xconfigure.width - p_view->width) / 2;
@@ -321,6 +332,7 @@ dsrt_view_event(
                             XConfigureWindow(p_display->dis, p_view->h, CWX|CWY, &wc);
                         }
                         else
+#endif /* #if defined(DSRT_FEATURE_GEOM) */
                         {
                             wc.width = o_event.xconfigure.width;
 

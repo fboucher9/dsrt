@@ -45,10 +45,13 @@ struct dsrt_opts
 
     unsigned int n_files;
 
+#if defined(DSRT_FEATURE_GEOM)
     unsigned int i_width;
 
     unsigned int i_height;
+#endif /* #if defined(DSRT_FEATURE_GEOM) */
 
+#if defined(DSRT_FEATURE_ZOOM)
     int i_zoom_x1;
 
     int i_zoom_y1;
@@ -56,12 +59,17 @@ struct dsrt_opts
     int i_zoom_x2;
 
     int i_zoom_y2;
+#endif /* #if defined(DSRT_FEATURE_ZOOM) */
 
     char b_fit;
 
+#if defined(DSRT_FEATURE_GEOM)
     char b_geometry;
+#endif /* #if defined(DSRT_FEATURE_GEOM) */
 
+#if defined(DSRT_FEATURE_ZOOM)
     char b_zoom;
+#endif /* #if defined(DSRT_FEATURE_ZOOM) */
 
 #if defined(DSRT_FEATURE_SHADOW)
     char b_shadow;

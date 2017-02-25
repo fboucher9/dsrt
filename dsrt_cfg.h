@@ -45,4 +45,10 @@ Description:
 /* Blend the image with black */
 #define DSRT_FEATURE_SHADOW
 
+/* Zoom of part of image */
+#define DSRT_FEATURE_ZOOM
+
+/* Force size of preview window */
+#define DSRT_FEATURE_GEOM
+
 /* end-of-file: dsrt_cfg.h */
