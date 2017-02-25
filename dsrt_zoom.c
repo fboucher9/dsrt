@@ -25,6 +25,9 @@ Description:
 /* Options */
 #include "dsrt_opts.h"
 
+/* View */
+#include "dsrt_view.h"
+
 char
 dsrt_zoom_init(
     struct dsrt_ctxt const * const p_ctxt)
@@ -133,11 +136,13 @@ dsrt_zoom_setup(
 void
 dsrt_zoom_event(
     struct dsrt_ctxt const * const p_ctxt,
-    char const c_event)
+    char const c_event,
+    int const i_mouse_x,
+    int const i_mouse_y)
 {
     struct dsrt_zoom * const p_zoom = p_ctxt->p_zoom;
 
-    if ('0' == c_event)
+    if ('<' == c_event)
     {
         int x;
 
@@ -147,9 +152,9 @@ dsrt_zoom_event(
 
         int h;
 
-        x = ((p_zoom->x1 + p_zoom->x2 - 1) / 2);
+        x = p_zoom->x1 + ((i_mouse_x * (p_zoom->x2 - p_zoom->x1)) / p_ctxt->p_view->width);
 
-        y = ((p_zoom->y1 + p_zoom->y2 - 1) / 2);
+        y = p_zoom->y1 + ((i_mouse_y * (p_zoom->y2 - p_zoom->y1)) / p_ctxt->p_view->height );
 
         w = (p_zoom->x2 - p_zoom->x1) * 2;
 
@@ -167,7 +172,37 @@ dsrt_zoom_event(
 
         p_zoom->y2 = y + h;
     }
-    else if (('1' <= c_event) && ('9' >= c_event))
+    else if ('=' == c_event)
+    {
+        int x;
+
+        int y;
+
+        int w;
+
+        int h;
+
+        x = p_zoom->x1 + ((i_mouse_x * (p_zoom->x2 - p_zoom->x1)) / p_ctxt->p_view->width);
+
+        y = p_zoom->y1 + ((i_mouse_y * (p_zoom->y2 - p_zoom->y1)) / p_ctxt->p_view->height );
+
+        w = (p_zoom->x2 - p_zoom->x1);
+
+        h = (p_zoom->y2 - p_zoom->y1);
+
+        x = x - w/2;
+
+        y = y - h/2;
+
+        p_zoom->x1 = x;
+
+        p_zoom->x2 = x + w;
+
+        p_zoom->y1 = y;
+
+        p_zoom->y2 = y + h;
+    }
+    else if ('>' == c_event)
     {
         int x;
 
@@ -191,39 +226,9 @@ dsrt_zoom_event(
             h = 1;
         }
 
-        if (('1' == c_event)
-            || ('4' == c_event)
-            || ('7' == c_event))
-        {
-            x = p_zoom->x1 + ((p_zoom->x2 - p_zoom->x1) * 1) / 6;
-        }
-        else if (('2' == c_event)
-            || ('5' == c_event)
-            || ('8' == c_event))
-        {
-            x = p_zoom->x1 + ((p_zoom->x2 - p_zoom->x1) * 3) / 6;
-        }
-        else
-        {
-            x = p_zoom->x1 + ((p_zoom->x2 - p_zoom->x1) * 5) / 6;
-        }
+        x = p_zoom->x1 + ((i_mouse_x * (p_zoom->x2 - p_zoom->x1)) / p_ctxt->p_view->width);
 
-        if (('1' == c_event)
-            || ('2' == c_event)
-            || ('3' == c_event))
-        {
-            y = p_zoom->y1 + ((p_zoom->y2 - p_zoom->y1) * 1) / 6;
-        }
-        else if (('4' == c_event)
-            || ('5' == c_event)
-            || ('6' == c_event))
-        {
-            y = p_zoom->y1 + ((p_zoom->y2 - p_zoom->y1) * 3) / 6;
-        }
-        else
-        {
-            y = p_zoom->y1 + ((p_zoom->y2 - p_zoom->y1) * 5) / 6;
-        }
+        y = p_zoom->y1 + ((i_mouse_y * (p_zoom->y2 - p_zoom->y1)) / p_ctxt->p_view->height);
 
         x = x - w/2;
 
@@ -296,6 +301,16 @@ dsrt_zoom_event(
         p_zoom->x1 += w;
 
         p_zoom->x2 += w;
+    }
+    else if (('n' == c_event) || ('p' == c_event))
+    {
+        p_zoom->x1 = 0;
+
+        p_zoom->y1 = 0;
+
+        p_zoom->x2 = -1;
+
+        p_zoom->y2 = -1;
     }
 } /* dsrt_zoom_event() */
 

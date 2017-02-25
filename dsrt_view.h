@@ -47,6 +47,8 @@ dsrt_view_cleanup(
 
 char
 dsrt_view_event(
-    struct dsrt_ctxt const * const p_ctxt);
+    struct dsrt_ctxt const * const p_ctxt,
+    int * const p_mouse_x,
+    int * const p_mouse_y);
 
 /* end-of-file: dsrt_view.h */

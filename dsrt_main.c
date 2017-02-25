@@ -732,7 +732,15 @@ dsrt_main(
                         if (dsrt_main_show_file(p_ctxt))
                         {
                             /* Wait for event from preview window... */
-                            c_event = dsrt_view_event(p_ctxt);
+                            int i_mouse_x;
+
+                            int i_mouse_y;
+
+                            i_mouse_x = 0;
+
+                            i_mouse_y = 0;
+
+                            c_event = dsrt_view_event(p_ctxt, &i_mouse_x, &i_mouse_y);
 
                             if ('n' == c_event)
                             {
@@ -751,7 +759,7 @@ dsrt_main(
                                 i_file_iterator --;
                             }
 
-                            dsrt_zoom_event(p_ctxt, c_event);
+                            dsrt_zoom_event(p_ctxt, c_event, i_mouse_x, i_mouse_y);
                         }
                         else
                         {

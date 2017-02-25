@@ -61,6 +61,8 @@ dsrt_zoom_setup(
 void
 dsrt_zoom_event(
     struct dsrt_ctxt const * const p_ctxt,
-    char const c_event);
+    char const c_event,
+    int const i_mouse_x,
+    int const i_mouse_y);
 
 /* end-of-file: dsrt_zoom.h */
