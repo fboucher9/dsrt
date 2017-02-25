@@ -49,7 +49,7 @@ struct dsrt_zoom
 
 /* --- Interface --- */
 
-char
+void
 dsrt_zoom_init(
     struct dsrt_ctxt const * const p_ctxt);
 

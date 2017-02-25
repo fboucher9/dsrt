@@ -300,11 +300,11 @@ dsrt_view_event(
                     }
                     else if (Button3 == o_event.xbutton.button)
                     {
-                        c_event = '<';
+                        c_event = '=';
                     }
                     else
                     {
-                        c_event = '=';
+                        c_event = '<';
                     }
 
                     *p_mouse_x = o_event.xbutton.x;

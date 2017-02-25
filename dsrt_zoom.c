@@ -30,12 +30,27 @@ Description:
 /* View */
 #include "dsrt_view.h"
 
-char
+static
+void
+dsrt_zoom_reset(
+    struct dsrt_ctxt const * const p_ctxt)
+{
+    struct dsrt_zoom * const p_zoom = p_ctxt->p_zoom;
+
+    p_zoom->x1 = 0;
+
+    p_zoom->y1 = 0;
+
+    p_zoom->x2 = -1;
+
+    p_zoom->y2 = -1;
+
+} /* dsrt_zoom_reset() */
+
+void
 dsrt_zoom_init(
     struct dsrt_ctxt const * const p_ctxt)
 {
-    char b_result;
-
     struct dsrt_zoom * const p_zoom = p_ctxt->p_zoom;
 
     struct dsrt_opts const * const p_opts = p_ctxt->p_opts;
@@ -52,18 +67,8 @@ dsrt_zoom_init(
     }
     else
     {
-        p_zoom->x1 = 0;
-
-        p_zoom->y1 = 0;
-
-        p_zoom->x2 = -1;
-
-        p_zoom->y2 = -1;
+        dsrt_zoom_reset(p_ctxt);
     }
-
-    b_result = 1;
-
-    return b_result;
 
 } /* dsrt_zoom_init() */
 
@@ -71,15 +76,7 @@ void
 dsrt_zoom_cleanup(
     struct dsrt_ctxt const * const p_ctxt)
 {
-    struct dsrt_zoom * const p_zoom = p_ctxt->p_zoom;
-
-    p_zoom->x1 = 0;
-
-    p_zoom->y1 = 0;
-
-    p_zoom->x2 = -1;
-
-    p_zoom->y2 = -1;
+    dsrt_zoom_reset(p_ctxt);
 
 } /* dsrt_zoom_cleanup() */
 
@@ -90,6 +87,10 @@ dsrt_zoom_setup(
     signed long int const height)
 {
     struct dsrt_zoom * const p_zoom = p_ctxt->p_zoom;
+
+    int w;
+
+    int h;
 
     if (((p_zoom->x2 - p_zoom->x1) > width) || ((p_zoom->x2 - p_zoom->x1) < 1))
     {
@@ -105,32 +106,36 @@ dsrt_zoom_setup(
         p_zoom->y2 = height;
     }
 
-    if (p_zoom->x1 < 0)
-    {
-        p_zoom->x2 = p_zoom->x2 - p_zoom->x1;
+    w = p_zoom->x2 - p_zoom->x1;
 
-        p_zoom->x1 = 0;
+    h = p_zoom->y2 - p_zoom->y1;
+
+    if (p_zoom->x1 < -(w / 4))
+    {
+        p_zoom->x2 = p_zoom->x2 - (p_zoom->x1 + (w / 4));
+
+        p_zoom->x1 = -(w / 4);
     }
 
-    if (p_zoom->y1 < 0)
+    if (p_zoom->y1 < -(h / 4))
     {
-        p_zoom->y2 = p_zoom->y2 - p_zoom->y1;
+        p_zoom->y2 = p_zoom->y2 - (p_zoom->y1 + (h / 4));
 
-        p_zoom->y1 = 0;
+        p_zoom->y1 = -(h / 4);
     }
 
-    if (p_zoom->x2 > width)
+    if (p_zoom->x2 > width + (w / 4))
     {
-        p_zoom->x1 = p_zoom->x1 + width - p_zoom->x2;
+        p_zoom->x1 = p_zoom->x1 + (width + w/4) - p_zoom->x2;
 
-        p_zoom->x2 = width;
+        p_zoom->x2 = width + (w / 4);
     }
 
-    if (p_zoom->y2 > height)
+    if (p_zoom->y2 > height + (h / 4))
     {
-        p_zoom->y1 = p_zoom->y1 + height - p_zoom->y2;
+        p_zoom->y1 = p_zoom->y1 + (height + h/4) - p_zoom->y2;
 
-        p_zoom->y2 = height;
+        p_zoom->y2 = height + (h / 4);
     }
 
 } /* dsrt_zoom_setup() */
@@ -306,13 +311,7 @@ dsrt_zoom_event(
     }
     else if (('n' == c_event) || ('p' == c_event))
     {
-        p_zoom->x1 = 0;
-
-        p_zoom->y1 = 0;
-
-        p_zoom->x2 = -1;
-
-        p_zoom->y2 = -1;
+        dsrt_zoom_reset(p_ctxt);
     }
 } /* dsrt_zoom_event() */
 
