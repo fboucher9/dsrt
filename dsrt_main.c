@@ -545,17 +545,26 @@ dsrt_main_show_file(
     dsrt_main_select_pixmap_size(p_ctxt, &i_pixmap_width, &i_pixmap_height, &i_image_width, &i_image_height);
 
 #if defined(DSRT_FEATURE_LOG)
-    fprintf(stderr, "        - j %4dx%-4d > z %4dx%-4d > i %4dx%-4d > p %4dx%-4d > v %4dx%-4d\n",
-        p_ctxt->p_jpeg->width,
-        p_ctxt->p_jpeg->height,
-        (int)(p_ctxt->p_zoom->x2 - p_ctxt->p_zoom->x1),
-        (int)(p_ctxt->p_zoom->y2 - p_ctxt->p_zoom->y1),
-        i_image_width,
-        i_image_height,
-        i_pixmap_width,
-        i_pixmap_height,
-        p_ctxt->p_view->width,
-        p_ctxt->p_view->height);
+    {
+        char a_zoom[32];
+
+        sprintf(a_zoom, "%ldx%ld+%ld+%ld",
+            p_ctxt->p_zoom->x2 - p_ctxt->p_zoom->x1,
+            p_ctxt->p_zoom->y2 - p_ctxt->p_zoom->y1,
+            p_ctxt->p_zoom->x1,
+            p_ctxt->p_zoom->y1);
+
+        fprintf(stderr, "        - j %4dx%-4d > z %-20s > i %4dx%-4d > p %4dx%-4d > v %4dx%-4d\n",
+            p_ctxt->p_jpeg->width,
+            p_ctxt->p_jpeg->height,
+            a_zoom,
+            i_image_width,
+            i_image_height,
+            i_pixmap_width,
+            i_pixmap_height,
+            p_ctxt->p_view->width,
+            p_ctxt->p_view->height);
+    }
 #endif /* #if defined(DSRT_FEATURE_LOG) */
 
     if (dsrt_pixmap_init(p_ctxt, i_pixmap_width, i_pixmap_height))
