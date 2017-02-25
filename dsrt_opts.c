@@ -197,6 +197,16 @@ dsrt_opts_init(
                 }
                 else
 #endif /* #if defined(DSRT_FEATURE_ZOOM) */
+#if defined(DSRT_FEATURE_GRAY)
+                if ((0 == strcmp(argv[argi], "--mono"))
+                    || (0 == strcmp(argv[argi], "-m")))
+                {
+                    p_opts->b_gray = 1;
+
+                    argi ++;
+                }
+                else
+#endif /* #if defined(DSRT_FEATURE_GRAY) */
                 if (0 == strcmp(argv[argi], "--"))
                 {
                     argi ++;

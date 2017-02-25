@@ -51,4 +51,7 @@ Description:
 /* Force size of preview window */
 #define DSRT_FEATURE_GEOM
 
+/* Convert color to gray */
+#define DSRT_FEATURE_GRAY
+
 /* end-of-file: dsrt_cfg.h */

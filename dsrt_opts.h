@@ -87,6 +87,10 @@ struct dsrt_opts
     char b_embed;
 #endif /* #if defined(DSRT_FEATURE_EMBED) */
 
+#if defined(DSRT_FEATURE_GRAY)
+    char b_gray;
+#endif /* #if defined(DSRT_FEATURE_GRAY) */
+
 }; /* struct dsrt_opts */
 
 /* --- Interface --- */

@@ -290,6 +290,16 @@ dsrt_main_convert_line(
 
         b1 = (b1 * fx1 * fy1 + b2 * fx1 * fy2 + b3 * fx2 * fy1 + b4 * fx2 * fy2) / 100 / 100;
 
+#if defined(DSRT_FEATURE_GRAY)
+        if (p_opts->b_gray)
+        {
+            /* r * 21 */
+            /* g * 72 */
+            /* b * 7 */
+            r1 = g1 = b1 = (((r1 * 21) + (g1 * 72) + (b1 * 7)) / 100);
+        }
+#endif /* #if defined(DSRT_FEATURE_GRAY) */
+
 #if defined(DSRT_FEATURE_SHADOW)
         if (p_opts->b_shadow)
         {
