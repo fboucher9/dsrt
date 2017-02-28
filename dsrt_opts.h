@@ -91,6 +91,12 @@ struct dsrt_opts
     char b_gray;
 #endif /* #if defined(DSRT_FEATURE_GRAY) */
 
+#if defined(DSRT_FEATURE_MIRROR)
+    char b_mirror_x;
+
+    char b_mirror_y;
+#endif /* #if defined(DSRT_FEATURE_MIRROR) */
+
 }; /* struct dsrt_opts */
 
 /* --- Interface --- */

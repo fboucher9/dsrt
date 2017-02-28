@@ -109,6 +109,10 @@ dsrt_main_convert_line(
 
     signed long int dx;
 
+    int x_dir;
+
+    int y_dir;
+
     int i_source_x1;
 
     int i_source_width;
@@ -140,13 +144,26 @@ dsrt_main_convert_line(
 
     sy >>= 7;
 
-    sy += i_source_y1;
+#if defined(DSRT_FEATURE_MIRROR)
+    if (p_opts->b_mirror_y)
+    {
+        sy = i_source_y1 + i_source_height - 1 - sy;
+
+        y_dir = -1;
+    }
+    else
+#endif /* #if defined(DSRT_FEATURE_MIRROR) */
+    {
+        sy = i_source_y1 + sy;
+
+        y_dir = 1;
+    }
 
     if (fy0 <= 64)
     {
         sy1 = sy;
 
-        sy2 = sy - 1;
+        sy2 = sy - y_dir;
 
         fy1 = 64 + fy0;
 
@@ -156,7 +173,7 @@ dsrt_main_convert_line(
     {
         sy1 = sy;
 
-        sy2 = sy + 1;
+        sy2 = sy + y_dir;
 
         fy1 = 128 + 64 - fy0;
 
@@ -203,13 +220,26 @@ dsrt_main_convert_line(
 
         sx >>= 7;
 
-        sx += i_source_x1;
+#if defined(DSRT_FEATURE_MIRROR)
+        if (p_opts->b_mirror_x)
+        {
+            sx = i_source_x1 + i_source_width - 1 - sx;
+
+            x_dir = -1;
+        }
+        else
+#endif /* #if defined(DSRT_FEATURE_MIRROR) */
+        {
+            sx = i_source_x1 + sx;
+
+            x_dir = 1;
+        }
 
         if (frac <= 64)
         {
             sx1 = sx;
 
-            sx2 = sx - 1;
+            sx2 = sx - x_dir;
 
             fx1 = 64 + frac;
 
@@ -219,7 +249,7 @@ dsrt_main_convert_line(
         {
             sx1 = sx;
 
-            sx2 = sx + 1;
+            sx2 = sx + x_dir;
 
             fx1 = 128 + 64 - frac;
 

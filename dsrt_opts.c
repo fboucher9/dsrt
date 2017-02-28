@@ -209,6 +209,24 @@ dsrt_opts_init(
                 }
                 else
 #endif /* #if defined(DSRT_FEATURE_GRAY) */
+#if defined(DSRT_FEATURE_MIRROR)
+                if ((0 == strcmp(argv[argi], "--mirror-x"))
+                    || (0 == strcmp(argv[argi], "-x")))
+                {
+                    p_opts->b_mirror_x = 1;
+
+                    argi ++;
+                }
+                else
+                if ((0 == strcmp(argv[argi], "--mirror-y"))
+                    || (0 == strcmp(argv[argi], "-y")))
+                {
+                    p_opts->b_mirror_y = 1;
+
+                    argi ++;
+                }
+                else
+#endif /* #if defined(DSRT_FEATURE_MIRROR) */
                 if (0 == strcmp(argv[argi], "--"))
                 {
                     argi ++;
@@ -266,7 +284,10 @@ dsrt_opts_init(
             "  -f --fit        Stretch to fir into window\n"
             "  -s --shadow     Blend image with black\n"
             "  -g --geom       Size of view\n"
-            "  -z --zoom       Zoom to rectangle in source\n");
+            "  -z --zoom       Zoom to rectangle in source\n"
+            "  -m --mono       Convert to gray scale\n"
+            "  -x --mirror-x   Mirror in x axis\n"
+            "  -y --mirror-y   Mirror in y axis\n");
     }
 #endif /* #if defined(DSRT_FEATURE_LOG) */
 

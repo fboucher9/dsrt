@@ -149,23 +149,82 @@ dsrt_zoom_event(
 {
     struct dsrt_zoom * const p_zoom = p_ctxt->p_zoom;
 
-    if ('<' == c_event)
+    struct dsrt_opts const * const p_opts = p_ctxt->p_opts;
+
+    int x;
+
+    int y;
+
+    int w;
+
+    int h;
+
+    int dx;
+
+    int dy;
+
+    (void)(p_opts);
+
+    w = (p_zoom->x2 - p_zoom->x1);
+
+    h = (p_zoom->y2 - p_zoom->y1);
+
+#if defined(DSRT_FEATURE_MIRROR)
+    if (p_opts->b_mirror_x)
     {
-        int x;
+        dx = -1;
 
-        int y;
-
-        int w;
-
-        int h;
+        x = p_zoom->x1 + (((p_ctxt->p_view->width - 1 - i_mouse_x) * (p_zoom->x2 - p_zoom->x1)) / p_ctxt->p_view->width);
+    }
+    else
+#endif /* #if defined(DSRT_FEATURE_MIRROR) */
+    {
+        dx = 1;
 
         x = p_zoom->x1 + ((i_mouse_x * (p_zoom->x2 - p_zoom->x1)) / p_ctxt->p_view->width);
+    }
+
+#if defined(DSRT_FEATURE_MIRROR)
+    if (p_opts->b_mirror_y)
+    {
+        dy = -1;
+
+        y = p_zoom->y1 + (((p_ctxt->p_view->height - 1 - i_mouse_y) * (p_zoom->y2 - p_zoom->y1)) / p_ctxt->p_view->height );
+    }
+    else
+#endif /* #if defined(DSRT_FEATURE_MIRROR) */
+    {
+        dy = 1;
 
         y = p_zoom->y1 + ((i_mouse_y * (p_zoom->y2 - p_zoom->y1)) / p_ctxt->p_view->height );
+    }
 
-        w = (p_zoom->x2 - p_zoom->x1) * 2;
+    if (('<' == c_event) ||
+       ('=' == c_event) ||
+       ('>' == c_event))
+    {
+        if ('<' == c_event)
+        {
+            w *= 2;
 
-        h = (p_zoom->y2 - p_zoom->y1) * 2;
+            h *= 2;
+        }
+        else if ('>' == c_event)
+        {
+            w /= 2;
+
+            h /= 2;
+        }
+
+        if (w < 1)
+        {
+            w = 1;
+        }
+
+        if (h < 1)
+        {
+            h = 1;
+        }
 
         x = x - w/2;
 
@@ -179,135 +238,53 @@ dsrt_zoom_event(
 
         p_zoom->y2 = y + h;
     }
-    else if ('=' == c_event)
+    else if (('w' == c_event)
+        || ('a' == c_event)
+        || ('s' == c_event)
+        || ('d' == c_event))
     {
-        int x;
+        h /= 2;
 
-        int y;
-
-        int w;
-
-        int h;
-
-        x = p_zoom->x1 + ((i_mouse_x * (p_zoom->x2 - p_zoom->x1)) / p_ctxt->p_view->width);
-
-        y = p_zoom->y1 + ((i_mouse_y * (p_zoom->y2 - p_zoom->y1)) / p_ctxt->p_view->height );
-
-        w = (p_zoom->x2 - p_zoom->x1);
-
-        h = (p_zoom->y2 - p_zoom->y1);
-
-        x = x - w/2;
-
-        y = y - h/2;
-
-        p_zoom->x1 = x;
-
-        p_zoom->x2 = x + w;
-
-        p_zoom->y1 = y;
-
-        p_zoom->y2 = y + h;
-    }
-    else if ('>' == c_event)
-    {
-        int x;
-
-        int y;
-
-        int w;
-
-        int h;
-
-        w = (p_zoom->x2 - p_zoom->x1) / 2;
-
-        h = (p_zoom->y2 - p_zoom->y1) / 2;
-
-        if (w < 1)
-        {
-            w = 1;
-        }
+        w /= 2;
 
         if (h < 1)
         {
             h = 1;
         }
 
-        x = p_zoom->x1 + ((i_mouse_x * (p_zoom->x2 - p_zoom->x1)) / p_ctxt->p_view->width);
-
-        y = p_zoom->y1 + ((i_mouse_y * (p_zoom->y2 - p_zoom->y1)) / p_ctxt->p_view->height);
-
-        x = x - w/2;
-
-        y = y - h/2;
-
-        p_zoom->x1 = x;
-
-        p_zoom->x2 = x + w;
-
-        p_zoom->y1 = y;
-
-        p_zoom->y2 = y + h;
-    }
-    else if ('w' == c_event)
-    {
-        int h;
-
-        h = (p_zoom->y2 - p_zoom->y1) / 2;
-
-        if (h < 1)
-        {
-            h = 1;
-        }
-
-        p_zoom->y1 -= h;
-
-        p_zoom->y2 -= h;
-    }
-    else if ('s' == c_event)
-    {
-        int h;
-
-        h = (p_zoom->y2 - p_zoom->y1) / 2;
-
-        if (h < 1)
-        {
-            h = 1;
-        }
-
-        p_zoom->y1 += h;
-
-        p_zoom->y2 += h;
-    }
-    else if ('a' == c_event)
-    {
-        int w;
-
-        w = (p_zoom->x2 - p_zoom->x1) / 2;
-
         if (w < 1)
         {
             w = 1;
         }
 
-        p_zoom->x1 -= w;
+        w *= dx;
 
-        p_zoom->x2 -= w;
-    }
-    else if ('d' == c_event)
-    {
-        int w;
+        h *= dy;
 
-        w = (p_zoom->x2 - p_zoom->x1) / 2;
-
-        if (w < 1)
+        if ('w' == c_event)
         {
-            w = 1;
+            p_zoom->y1 -= h;
+
+            p_zoom->y2 -= h;
         }
+        else if ('s' == c_event)
+        {
+            p_zoom->y1 += h;
 
-        p_zoom->x1 += w;
+            p_zoom->y2 += h;
+        }
+        else if ('a' == c_event)
+        {
+            p_zoom->x1 -= w;
 
-        p_zoom->x2 += w;
+            p_zoom->x2 -= w;
+        }
+        else if ('d' == c_event)
+        {
+            p_zoom->x1 += w;
+
+            p_zoom->x2 += w;
+        }
     }
     else if (('n' == c_event) || ('p' == c_event))
     {

@@ -54,4 +54,7 @@ Description:
 /* Convert color to gray */
 #define DSRT_FEATURE_GRAY
 
+/* Mirror in x and y axis */
+#define DSRT_FEATURE_MIRROR
+
 /* end-of-file: dsrt_cfg.h */
