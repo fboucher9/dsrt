@@ -40,7 +40,7 @@ struct dsrt_opts
 #endif /* #if defined(DSRT_FEATURE_EMBED) */
 
 #if defined(DSRT_FEATURE_SHADOW)
-    unsigned int i_shadow;
+    unsigned long int i_shadow;
 #endif /* #if defined(DSRT_FEATURE_SHADOW) */
 
     unsigned int n_files;

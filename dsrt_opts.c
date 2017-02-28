@@ -107,7 +107,9 @@ dsrt_opts_init(
 
                     if (argi < argc)
                     {
-                        sscanf(argv[argi], "%u", &p_opts->i_shadow);
+                        sscanf(argv[argi], "%lu", &p_opts->i_shadow);
+
+                        p_opts->i_shadow = ((p_opts->i_shadow * 1024ul) / 100ul);
 
                         p_opts->b_shadow = 1;
 

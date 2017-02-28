@@ -71,10 +71,7 @@ static
 void
 dsrt_main_convert_line(
     struct dsrt_ctxt const * const p_ctxt,
-    signed long int sy1,
-    signed long int fy1,
-    signed long int sy2,
-    signed long int fy2)
+    signed long int dy)
 {
     struct dsrt_jpeg * const p_jpeg = p_ctxt->p_jpeg;
 
@@ -94,11 +91,77 @@ dsrt_main_convert_line(
 
     JSAMPLE * lb2;
 
+    signed long int i_source_y1;
+
+    signed long int i_source_height;
+
+    signed long int sy;
+
+    unsigned long int fy0;
+
+    signed long int sy1;
+
+    signed long int sy2;
+
+    unsigned long int fy1;
+
+    unsigned long int fy2;
+
     signed long int dx;
 
     int i_source_x1;
 
     int i_source_width;
+
+#if defined(DSRT_FEATURE_ZOOM)
+    i_source_y1 = p_zoom->y1;
+
+    i_source_height = p_zoom->y2 - p_zoom->y1;
+#else /* #if defined(DSRT_FEATURE_ZOOM) */
+    i_source_y1 = 0;
+
+    i_source_height = p_ctxt->p_jpeg->height;
+#endif /* #if defined(DSRT_FEATURE_ZOOM) */
+
+#if defined(DSRT_FEATURE_ZOOM)
+    i_source_x1 = p_zoom->x1;
+
+    i_source_width = p_zoom->x2 - p_zoom->x1;
+#else /* #if defined(DSRT_FEATURE_ZOOM) */
+    i_source_x1 = 0;
+
+    i_source_width = p_jpeg->width;
+#endif /* #if defined(DSRT_FEATURE_ZOOM) */
+
+    /* Calculate srcy */
+    sy = (((dy * 128 + 64) * i_source_height) / p_ctxt->p_image->height);
+
+    fy0 = ((unsigned long int)(sy) & 0x7F);
+
+    sy >>= 7;
+
+    sy += i_source_y1;
+
+    if (fy0 <= 64)
+    {
+        sy1 = sy;
+
+        sy2 = sy - 1;
+
+        fy1 = 64 + fy0;
+
+        fy2 = 64 - fy0;
+    }
+    else
+    {
+        sy1 = sy;
+
+        sy2 = sy + 1;
+
+        fy1 = 128 + 64 - fy0;
+
+        fy2 = fy0 - 64;
+    }
 
     (void)(p_opts);
 
@@ -120,16 +183,6 @@ dsrt_main_convert_line(
         lb2 = NULL;
     }
 
-#if defined(DSRT_FEATURE_ZOOM)
-    i_source_x1 = p_zoom->x1;
-
-    i_source_width = p_zoom->x2 - p_zoom->x1;
-#else /* #if defined(DSRT_FEATURE_ZOOM) */
-    i_source_x1 = 0;
-
-    i_source_width = p_jpeg->width;
-#endif /* #if defined(DSRT_FEATURE_ZOOM) */
-
     /* for all destination pixels */
     for (dx = 0; dx < p_ctxt->p_image->width; dx++)
     {
@@ -137,39 +190,30 @@ dsrt_main_convert_line(
         u_int32_t r1;
         u_int32_t g1;
         u_int32_t b1;
-        u_int32_t r2;
-        u_int32_t g2;
-        u_int32_t b2;
-        u_int32_t r3;
-        u_int32_t g3;
-        u_int32_t b3;
-        u_int32_t r4;
-        u_int32_t g4;
-        u_int32_t b4;
-        signed long int frac;
+        unsigned long int frac;
         signed long int sx1;
         signed long int sx2;
-        signed long int fx1;
-        signed long int fx2;
+        unsigned long int fx1;
+        unsigned long int fx2;
 
         /* calculate source position */
-        signed long int sx = (((dx * 100 + 50) * i_source_width) / p_ctxt->p_image->width);
+        signed long int sx = (((dx * 128 + 64) * i_source_width) / p_ctxt->p_image->width);
 
-        frac = (sx % 100);
+        frac = (sx & 0x7F);
 
-        sx /= 100;
+        sx >>= 7;
 
         sx += i_source_x1;
 
-        if (frac <= 50)
+        if (frac <= 64)
         {
             sx1 = sx;
 
             sx2 = sx - 1;
 
-            fx1 = 50 + frac;
+            fx1 = 64 + frac;
 
-            fx2 = 50 - frac;
+            fx2 = 64 - frac;
         }
         else
         {
@@ -177,10 +221,16 @@ dsrt_main_convert_line(
 
             sx2 = sx + 1;
 
-            fx1 = 150 - frac;
+            fx1 = 128 + 64 - frac;
 
-            fx2 = frac - 50;
+            fx2 = frac - 64;
         }
+
+        r1 = 0;
+
+        g1 = 0;
+
+        b1 = 0;
 
         if ((sx1 >= 0) && (sx1 < p_jpeg->width))
         {
@@ -192,45 +242,21 @@ dsrt_main_convert_line(
 
             if (lb1)
             {
-                r1 = (u_int32_t)(lb1[xr]);
+                r1 += (u_int32_t)(lb1[xr]) * fx1 * fy1;
 
-                g1 = (u_int32_t)(lb1[xg]);
+                g1 += (u_int32_t)(lb1[xg]) * fx1 * fy1;
 
-                b1 = (u_int32_t)(lb1[xb]);
-            }
-            else
-            {
-                r1 = 0;
-
-                g1 = 0;
-
-                b1 = 0;
+                b1 += (u_int32_t)(lb1[xb]) * fx1 * fy1;
             }
 
             if (lb2)
             {
-                r2 = (u_int32_t)(lb2[xr]);
+                r1 += (u_int32_t)(lb2[xr]) * fx1 * fy2;
 
-                g2 = (u_int32_t)(lb2[xg]);
+                g1 += (u_int32_t)(lb2[xg]) * fx1 * fy2;
 
-                b2 = (u_int32_t)(lb2[xb]);
+                b1 += (u_int32_t)(lb2[xb]) * fx1 * fy2;
             }
-            else
-            {
-                r2 = 0;
-
-                g2 = 0;
-
-                b2 = 0;
-            }
-        }
-        else
-        {
-            r1 = r2 = 0;
-
-            g1 = g2 = 0;
-
-            b1 = b2 = 0;
         }
 
         if ((sx2 >= 0) && (sx2 < p_jpeg->width))
@@ -243,52 +269,28 @@ dsrt_main_convert_line(
 
             if (lb1)
             {
-                r3 = (u_int32_t)(lb1[xr]);
+                r1 += (u_int32_t)(lb1[xr]) * fx2 * fy1;
 
-                g3 = (u_int32_t)(lb1[xg]);
+                g1 += (u_int32_t)(lb1[xg]) * fx2 * fy1;
 
-                b3 = (u_int32_t)(lb1[xb]);
-            }
-            else
-            {
-                r3 = 0;
-
-                g3 = 0;
-
-                b3 = 0;
+                b1 += (u_int32_t)(lb1[xb]) * fx2 * fy1;
             }
 
             if (lb2)
             {
-                r4 = (u_int32_t)(lb2[xr]);
+                r1 += (u_int32_t)(lb2[xr]) * fx2 * fy2;
 
-                g4 = (u_int32_t)(lb2[xg]);
+                g1 += (u_int32_t)(lb2[xg]) * fx2 * fy2;
 
-                b4 = (u_int32_t)(lb2[xb]);
-            }
-            else
-            {
-                r4 = 0;
-
-                g4 = 0;
-
-                b4 = 0;
+                b1 += (u_int32_t)(lb2[xb]) * fx2 * fy2;
             }
         }
-        else
-        {
-            r3 = r4 = 0;
 
-            g3 = g4 = 0;
+        r1 >>= 14u;
 
-            b3 = b4 = 0;
-        }
+        g1 >>= 14u;
 
-        r1 = (r1 * fx1 * fy1 + r2 * fx1 * fy2 + r3 * fx2 * fy1 + r4 * fx2 * fy2) / 100 / 100;
-
-        g1 = (g1 * fx1 * fy1 + g2 * fx1 * fy2 + g3 * fx2 * fy1 + g4 * fx2 * fy2) / 100 / 100;
-
-        b1 = (b1 * fx1 * fy1 + b2 * fx1 * fy2 + b3 * fx2 * fy1 + b4 * fx2 * fy2) / 100 / 100;
+        b1 >>= 14u;
 
 #if defined(DSRT_FEATURE_GRAY)
         if (p_opts->b_gray)
@@ -296,18 +298,18 @@ dsrt_main_convert_line(
             /* r * 21 */
             /* g * 72 */
             /* b * 7 */
-            r1 = g1 = b1 = (((r1 * 21) + (g1 * 72) + (b1 * 7)) / 100);
+            r1 = g1 = b1 = (((r1 * 215u) + (g1 * 737u) + (b1 * 72u)) >> 10u);
         }
 #endif /* #if defined(DSRT_FEATURE_GRAY) */
 
 #if defined(DSRT_FEATURE_SHADOW)
         if (p_opts->b_shadow)
         {
-            r1 = (r1 * p_opts->i_shadow) / 100u;
+            r1 = (r1 * p_opts->i_shadow) >> 10u;
 
-            g1 = (g1 * p_opts->i_shadow) / 100u;
+            g1 = (g1 * p_opts->i_shadow) >> 10u;
 
-            b1 = (b1 * p_opts->i_shadow) / 100u;
+            b1 = (b1 * p_opts->i_shadow) >> 10u;
         }
 #endif /* #if defined(DSRT_FEATURE_SHADOW) */
 
@@ -376,39 +378,9 @@ dsrt_main_scan(
 {
     signed long int dy;
 
-    signed long int sy;
-
-    signed long int frac;
-
-    signed long int sy1;
-
-    signed long int sy2;
-
-    signed long int fy1;
-
-    signed long int fy2;
-
-#if defined(DSRT_FEATURE_ZOOM)
-    struct dsrt_zoom const * const p_zoom = p_ctxt->p_zoom;
-#endif /* #if defined(DSRT_FEATURE_ZOOM) */
-
-    int i_source_y1;
-
-    int i_source_height;
-
     XSetForeground(p_ctxt->p_display->dis, p_ctxt->p_display->copyGC, BlackPixel(p_ctxt->p_display->dis, p_ctxt->p_display->screen));
 
     XFillRectangle(p_ctxt->p_display->dis, p_ctxt->p_pixmap->pixmap, p_ctxt->p_display->copyGC, 0, 0, p_ctxt->p_pixmap->width, p_ctxt->p_pixmap->height);
-
-#if defined(DSRT_FEATURE_ZOOM)
-    i_source_y1 = p_zoom->y1;
-
-    i_source_height = p_zoom->y2 - p_zoom->y1;
-#else /* #if defined(DSRT_FEATURE_ZOOM) */
-    i_source_y1 = 0;
-
-    i_source_height = p_ctxt->p_jpeg->height;
-#endif /* #if defined(DSRT_FEATURE_ZOOM) */
 
     for (dy = 0; dy < p_ctxt->p_image->height; ++dy)
     {
@@ -422,37 +394,7 @@ dsrt_main_scan(
             memset(p_ctxt->p_image->img->data, 0, p_ctxt->p_image->width * 2);
         }
 
-        /* Calculate srcy */
-        sy = (((dy * 100 + 50) * i_source_height) / p_ctxt->p_image->height);
-
-        frac = sy % 100;
-
-        sy /= 100;
-
-        sy += i_source_y1;
-
-        if (frac <= 50)
-        {
-            sy1 = sy;
-
-            sy2 = sy - 1;
-
-            fy1 = 50 + frac;
-
-            fy2 = 50 - frac;
-        }
-        else
-        {
-            sy1 = sy;
-
-            sy2 = sy + 1;
-
-            fy1 = 150 - frac;
-
-            fy2 = frac - 50;
-        }
-
-        dsrt_main_convert_line(p_ctxt, sy1, fy1, sy2, fy2);
+        dsrt_main_convert_line(p_ctxt, dy);
 
         dsrt_main_write_line(p_ctxt, dy);
     }
