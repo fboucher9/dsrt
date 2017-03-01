@@ -5,4 +5,5 @@ dsrt.exe
 *.cmd
 *.gch
 *.jpg
+*.cxx
 tags

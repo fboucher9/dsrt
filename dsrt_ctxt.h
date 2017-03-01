@@ -23,9 +23,6 @@ Comments:
 #define INC_DSRT_CTXT_H
 
 /* Predefine pointer to module */
-struct dsrt_main;
-
-/* Predefine pointer to module */
 struct dsrt_display;
 
 /* Predefine pointer to module */
@@ -49,8 +46,6 @@ struct dsrt_zoom;
 /* Context */
 struct dsrt_ctxt
 {
-    struct dsrt_main * p_main;
-
     struct dsrt_display * p_display;
 
     struct dsrt_opts * p_opts;

@@ -45,7 +45,7 @@ Description:
 /* Module */
 #include "dsrt_main.h"
 
-struct dsrt_main
+struct dsrt_main_ctxt
 {
     struct dsrt_ctxt o_ctxt;
 
@@ -639,11 +639,9 @@ dsrt_main_show_file(
 static
 void
 dsrt_main_init_ctxt(
-    struct dsrt_main * const p_main)
+    struct dsrt_main_ctxt * const p_main)
 {
     struct dsrt_ctxt * const p_ctxt = &p_main->o_ctxt;
-
-    p_ctxt->p_main = p_main;
 
     p_ctxt->p_display = &p_main->o_display;
 
@@ -679,7 +677,7 @@ dsrt_main(
 {
     int i_result;
 
-    struct dsrt_main o_main;
+    struct dsrt_main_ctxt o_main;
 
     struct dsrt_ctxt const * p_ctxt = &o_main.o_ctxt;
 
