@@ -52,13 +52,13 @@ struct dsrt_opts
 #endif /* #if defined(DSRT_FEATURE_GEOM) */
 
 #if defined(DSRT_FEATURE_ZOOM)
-    int i_zoom_x1;
+    int i_zoom_left;
 
-    int i_zoom_y1;
+    int i_zoom_top;
 
-    int i_zoom_x2;
+    unsigned int i_zoom_width;
 
-    int i_zoom_y2;
+    unsigned int i_zoom_height;
 #endif /* #if defined(DSRT_FEATURE_ZOOM) */
 
     char b_fit;

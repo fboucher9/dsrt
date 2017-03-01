@@ -37,13 +37,13 @@ dsrt_zoom_reset(
 {
     struct dsrt_zoom * const p_zoom = p_ctxt->p_zoom;
 
-    p_zoom->x1 = 0;
+    p_zoom->i_left = 0;
 
-    p_zoom->y1 = 0;
+    p_zoom->i_top = 0;
 
-    p_zoom->x2 = -1;
+    p_zoom->u_width = 0;
 
-    p_zoom->y2 = -1;
+    p_zoom->u_height = 0;
 
 } /* dsrt_zoom_reset() */
 
@@ -57,13 +57,13 @@ dsrt_zoom_init(
 
     if (p_opts->b_zoom)
     {
-        p_zoom->x1 = p_opts->i_zoom_x1;
+        p_zoom->i_left = p_opts->i_zoom_left;
 
-        p_zoom->y1 = p_opts->i_zoom_y1;
+        p_zoom->i_top = p_opts->i_zoom_top;
 
-        p_zoom->x2 = p_opts->i_zoom_x2;
+        p_zoom->u_width = p_opts->i_zoom_width;
 
-        p_zoom->y2 = p_opts->i_zoom_y2;
+        p_zoom->u_height = p_opts->i_zoom_height;
     }
     else
     {
@@ -88,58 +88,54 @@ dsrt_zoom_setup(
 {
     struct dsrt_zoom * const p_zoom = p_ctxt->p_zoom;
 
-    int w;
+    int i_zoom_width;
 
-    int h;
+    int i_zoom_height;
 
-    int i_width = (int)(u_width);
+    int i_width;
 
-    int i_height = (int)(u_height);
+    int i_height;
 
-    if (((p_zoom->x2 - p_zoom->x1) > i_width) || ((p_zoom->x2 - p_zoom->x1) < 1))
+    if ((p_zoom->u_width > u_width) || !p_zoom->u_width)
     {
-        p_zoom->x1 = 0;
+        p_zoom->i_left = 0;
 
-        p_zoom->x2 = i_width;
+        p_zoom->u_width = u_width;
     }
 
-    if (((p_zoom->y2 - p_zoom->y1) > i_height) || ((p_zoom->y2 - p_zoom->y1) < 1))
+    if ((p_zoom->u_height > u_height) || !p_zoom->u_height)
     {
-        p_zoom->y1 = 0;
+        p_zoom->i_top = 0;
 
-        p_zoom->y2 = i_height;
+        p_zoom->u_height = u_height;
     }
 
-    w = p_zoom->x2 - p_zoom->x1;
+    i_width = (int)(u_width);
 
-    h = p_zoom->y2 - p_zoom->y1;
+    i_height = (int)(u_height);
 
-    if (p_zoom->x1 < -(w / 4))
+    i_zoom_width = (int)(p_zoom->u_width);
+
+    i_zoom_height = (int)(p_zoom->u_height);
+
+    if (p_zoom->i_left < -(i_zoom_width / 4))
     {
-        p_zoom->x2 = p_zoom->x2 - (p_zoom->x1 + (w / 4));
-
-        p_zoom->x1 = -(w / 4);
+        p_zoom->i_left = -(i_zoom_width / 4);
     }
 
-    if (p_zoom->y1 < -(h / 4))
+    if (p_zoom->i_top < -(i_zoom_height / 4))
     {
-        p_zoom->y2 = p_zoom->y2 - (p_zoom->y1 + (h / 4));
-
-        p_zoom->y1 = -(h / 4);
+        p_zoom->i_top = -(i_zoom_height / 4);
     }
 
-    if (p_zoom->x2 > i_width + (w / 4))
+    if (p_zoom->i_left + i_zoom_width > i_width + (i_zoom_width / 4))
     {
-        p_zoom->x1 = p_zoom->x1 + (i_width + w/4) - p_zoom->x2;
-
-        p_zoom->x2 = i_width + (w / 4);
+        p_zoom->i_left = (i_width + i_zoom_width/4) - i_zoom_width;
     }
 
-    if (p_zoom->y2 > i_height + (h / 4))
+    if (p_zoom->i_top + i_zoom_height > i_height + (i_zoom_height / 4))
     {
-        p_zoom->y1 = p_zoom->y1 + (i_height + h/4) - p_zoom->y2;
-
-        p_zoom->y2 = i_height + (h / 4);
+        p_zoom->i_top = (i_height + i_zoom_height/4) - i_zoom_height;
     }
 
 } /* dsrt_zoom_setup() */
@@ -169,23 +165,23 @@ dsrt_zoom_event(
 
     (void)(p_opts);
 
-    w = (p_zoom->x2 - p_zoom->x1);
+    w = (int)(p_zoom->u_width);
 
-    h = (p_zoom->y2 - p_zoom->y1);
+    h = (int)(p_zoom->u_height);
 
 #if defined(DSRT_FEATURE_MIRROR)
     if (p_opts->b_mirror_x)
     {
         dx = -1;
 
-        x = p_zoom->x1 + ((((int)(p_ctxt->p_view->width) - 1 - i_mouse_x) * (p_zoom->x2 - p_zoom->x1)) / (int)(p_ctxt->p_view->width));
+        x = p_zoom->i_left + ((((int)(p_ctxt->p_view->width) - 1 - i_mouse_x) * w) / (int)(p_ctxt->p_view->width));
     }
     else
 #endif /* #if defined(DSRT_FEATURE_MIRROR) */
     {
         dx = 1;
 
-        x = p_zoom->x1 + ((i_mouse_x * (p_zoom->x2 - p_zoom->x1)) / (int)(p_ctxt->p_view->width));
+        x = p_zoom->i_left + ((i_mouse_x * w) / (int)(p_ctxt->p_view->width));
     }
 
 #if defined(DSRT_FEATURE_MIRROR)
@@ -193,14 +189,14 @@ dsrt_zoom_event(
     {
         dy = -1;
 
-        y = p_zoom->y1 + ((((int)(p_ctxt->p_view->height) - 1 - i_mouse_y) * (p_zoom->y2 - p_zoom->y1)) / (int)(p_ctxt->p_view->height) );
+        y = p_zoom->i_top + ((((int)(p_ctxt->p_view->height) - 1 - i_mouse_y) * h) / (int)(p_ctxt->p_view->height) );
     }
     else
 #endif /* #if defined(DSRT_FEATURE_MIRROR) */
     {
         dy = 1;
 
-        y = p_zoom->y1 + ((i_mouse_y * (p_zoom->y2 - p_zoom->y1)) / (int)(p_ctxt->p_view->height) );
+        y = p_zoom->i_top + ((i_mouse_y * h) / (int)(p_ctxt->p_view->height) );
     }
 
     if (('<' == c_event) ||
@@ -234,13 +230,13 @@ dsrt_zoom_event(
 
         y = y - h/2;
 
-        p_zoom->x1 = x;
+        p_zoom->i_left = x;
 
-        p_zoom->x2 = x + w;
+        p_zoom->u_width = (unsigned int)(w);
 
-        p_zoom->y1 = y;
+        p_zoom->i_top = y;
 
-        p_zoom->y2 = y + h;
+        p_zoom->u_height = (unsigned int)(h);
     }
     else if (('w' == c_event)
         || ('a' == c_event)
@@ -267,27 +263,19 @@ dsrt_zoom_event(
 
         if ('w' == c_event)
         {
-            p_zoom->y1 -= h;
-
-            p_zoom->y2 -= h;
+            p_zoom->i_top -= h;
         }
         else if ('s' == c_event)
         {
-            p_zoom->y1 += h;
-
-            p_zoom->y2 += h;
+            p_zoom->i_top += h;
         }
         else if ('a' == c_event)
         {
-            p_zoom->x1 -= w;
-
-            p_zoom->x2 -= w;
+            p_zoom->i_left -= w;
         }
         else if ('d' == c_event)
         {
-            p_zoom->x1 += w;
-
-            p_zoom->x2 += w;
+            p_zoom->i_left += w;
         }
     }
     else if (('n' == c_event) || ('p' == c_event))

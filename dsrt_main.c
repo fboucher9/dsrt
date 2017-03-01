@@ -118,9 +118,9 @@ dsrt_main_convert_line(
     unsigned long int i_source_width;
 
 #if defined(DSRT_FEATURE_ZOOM)
-    i_source_y1 = p_zoom->y1;
+    i_source_y1 = p_zoom->i_top;
 
-    i_source_height = (unsigned long int)(p_zoom->y2 - p_zoom->y1);
+    i_source_height = p_zoom->u_height;
 #else /* #if defined(DSRT_FEATURE_ZOOM) */
     i_source_y1 = 0;
 
@@ -128,9 +128,9 @@ dsrt_main_convert_line(
 #endif /* #if defined(DSRT_FEATURE_ZOOM) */
 
 #if defined(DSRT_FEATURE_ZOOM)
-    i_source_x1 = p_zoom->x1;
+    i_source_x1 = p_zoom->i_left;
 
-    i_source_width = (unsigned long int)(p_zoom->x2 - p_zoom->x1);
+    i_source_width = p_zoom->u_width;
 #else /* #if defined(DSRT_FEATURE_ZOOM) */
     i_source_x1 = 0;
 
@@ -470,9 +470,9 @@ dsrt_main_select_pixmap_size(
     unsigned int i_source_height;
 
 #if defined(DSRT_FEATURE_ZOOM)
-    i_source_width = (unsigned int)(p_zoom->x2 - p_zoom->x1);
+    i_source_width = p_zoom->u_width;
 
-    i_source_height = (unsigned int)(p_zoom->y2 - p_zoom->y1);
+    i_source_height = p_zoom->u_height;
 #else /* #if defined(DSRT_FEATURE_ZOOM) */
     i_source_width = p_ctxt->p_jpeg->width;
 
@@ -561,11 +561,11 @@ dsrt_main_show_file(
 #if defined(DSRT_FEATURE_ZOOM)
         char a_zoom[32];
 
-        sprintf(a_zoom, "%ldx%ld+%ld+%ld",
-            p_ctxt->p_zoom->x2 - p_ctxt->p_zoom->x1,
-            p_ctxt->p_zoom->y2 - p_ctxt->p_zoom->y1,
-            p_ctxt->p_zoom->x1,
-            p_ctxt->p_zoom->y1);
+        sprintf(a_zoom, "%lux%lu+%ld+%ld",
+            p_ctxt->p_zoom->u_width,
+            p_ctxt->p_zoom->u_height,
+            p_ctxt->p_zoom->i_left,
+            p_ctxt->p_zoom->i_top);
 #endif /* #if defined(DSRT_FEATURE_ZOOM) */
 
         fprintf(stderr, "        - j %4dx%-4d "

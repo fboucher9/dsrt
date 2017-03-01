@@ -34,16 +34,16 @@ Description:
 struct dsrt_zoom
 {
     /* Left inclusive coordinate of zoom rectangle */
-    signed long int x1;
+    signed long int i_left;
 
     /* Top inclusive coordinate of zoom rectangle */
-    signed long int y1;
+    signed long int i_top;
 
     /* Right exclusive coordinate of zoom rectangle */
-    signed long int x2;
+    unsigned long int u_width;
 
     /* Bottom exclusive coordinate of zoom rectangle */
-    signed long int y2;
+    unsigned long int u_height;
 
 }; /* struct dsrt_zoom */
 
@@ -60,8 +60,8 @@ dsrt_zoom_cleanup(
 void
 dsrt_zoom_setup(
     struct dsrt_ctxt const * const p_ctxt,
-    unsigned int const width,
-    unsigned int const height);
+    unsigned int const u_width,
+    unsigned int const u_height);
 
 void
 dsrt_zoom_event(

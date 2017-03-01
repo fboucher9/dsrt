@@ -168,27 +168,13 @@ dsrt_opts_init(
 
                     if (argi < argc)
                     {
-                        sscanf(argv[argi], "%dx%d+%d+%d",
-                            &p_opts->i_zoom_x2,
-                            &p_opts->i_zoom_y2,
-                            &p_opts->i_zoom_x1,
-                            &p_opts->i_zoom_y1);
-
-                        p_opts->i_zoom_x2 += p_opts->i_zoom_x1;
-
-                        p_opts->i_zoom_y2 += p_opts->i_zoom_y1;
+                        sscanf(argv[argi], "%ux%u+%d+%d",
+                            &p_opts->i_zoom_width,
+                            &p_opts->i_zoom_height,
+                            &p_opts->i_zoom_left,
+                            &p_opts->i_zoom_top);
 
                         p_opts->b_zoom = 1;
-
-                        if (p_opts->i_zoom_x2 <= p_opts->i_zoom_x1)
-                        {
-                            p_opts->i_zoom_x2 = p_opts->i_zoom_x1 + 1;
-                        }
-
-                        if (p_opts->i_zoom_y2 <= p_opts->i_zoom_y1)
-                        {
-                            p_opts->i_zoom_y2 = p_opts->i_zoom_y1 + 1;
-                        }
 
                         argi ++;
                     }
