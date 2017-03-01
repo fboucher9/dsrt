@@ -97,6 +97,8 @@ struct dsrt_opts
     char b_mirror_y;
 #endif /* #if defined(DSRT_FEATURE_MIRROR) */
 
+    char a_padding[6u];
+
 }; /* struct dsrt_opts */
 
 /* --- Interface --- */

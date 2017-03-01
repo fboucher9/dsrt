@@ -43,13 +43,13 @@ dsrt_display_init(
 
         p_display->screen = DefaultScreen(p_display->dis);
 
-        p_display->depth = DefaultDepth(p_display->dis, p_display->screen);
+        p_display->depth = (unsigned int)(DefaultDepth(p_display->dis, p_display->screen));
 
         p_display->vis = DefaultVisual(p_display->dis, p_display->screen);
 
-        p_display->width = DisplayWidth(p_display->dis, p_display->screen);
+        p_display->width = (unsigned int)(DisplayWidth(p_display->dis, p_display->screen));
 
-        p_display->height = DisplayHeight(p_display->dis, p_display->screen);
+        p_display->height = (unsigned int)(DisplayHeight(p_display->dis, p_display->screen));
 
         p_display->copyGC = XCreateGC(p_display->dis, p_display->root, 0, NULL);
 

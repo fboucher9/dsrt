@@ -60,8 +60,8 @@ dsrt_zoom_cleanup(
 void
 dsrt_zoom_setup(
     struct dsrt_ctxt const * const p_ctxt,
-    signed long int const width,
-    signed long int const height);
+    unsigned int const width,
+    unsigned int const height);
 
 void
 dsrt_zoom_event(

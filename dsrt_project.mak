@@ -16,7 +16,23 @@ DSRT_CFLAGS_chk = -g -O0
 
 DSRT_CFLAGS_fre = -O2 -Os
 
-DSRT_CFLAGS = $(CFLAGS) $(DSRT_CFLAGS_$(DSRT_CFG_DBG)) -pedantic -Wall -Wextra -I$(DSRT_DST_PATH)
+DSRT_WARNINGS = \
+    -pedantic -Wall -Wextra -Wabi -Waggregate-return -Warray-bounds \
+    -Wattributes -Wbad-function-cast -Wbuiltin-macro-redefined -Wc++-compat \
+    -Wcast-align -Wcast-qual -Wconversion -Wdeclaration-after-statement \
+    -Wdeprecated -Wdiv-by-zero -Wendif-labels -Wfloat-equal \
+    -Wformat-contains-nul -Wformat-extra-args -Wformat-nonliteral \
+    -Wformat-security -Wformat-y2k -Wformat-zero-length -Wint-to-pointer-cast \
+    -Winvalid-pch -Wlarger-than=1024 -Wlong-long -Wmissing-declarations \
+    -Wmissing-format-attribute -Wmissing-include-dirs -Wmissing-prototypes \
+    -Wmultichar -Wnested-externs -Wold-style-definition -Woverflow \
+    -Woverlength-strings -Wpacked -Wpacked-bitfield-compat -Wpadded \
+    -Wpointer-arith -Wpointer-to-int-cast -Wpragmas -Wredundant-decls \
+    -Wsequence-point -Wshadow -Wstrict-overflow=5 -Wstrict-prototypes \
+    -Wsync-nand -Wundef -Wunused -Wunused-macros -Wunused-result \
+    -Wvariadic-macros -Wvla -Wwrite-strings
+
+DSRT_CFLAGS = $(CFLAGS) $(DSRT_CFLAGS_$(DSRT_CFG_DBG)) $(DSRT_WARNINGS) -I$(DSRT_DST_PATH)
 
 DSRT_LDFLAGS_chk =
 

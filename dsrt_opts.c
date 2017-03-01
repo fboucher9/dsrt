@@ -48,7 +48,7 @@ dsrt_opts_init(
 
     if (argc > 1)
     {
-        p_opts->a_filename = (char * *)(malloc((argc - 1) * sizeof(char *)));
+        p_opts->a_filename = (char * *)(malloc((unsigned int)(argc - 1) * sizeof(char *)));
 
         if (p_opts->a_filename)
         {

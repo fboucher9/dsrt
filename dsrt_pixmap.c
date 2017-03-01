@@ -32,8 +32,8 @@ Description:
 char
 dsrt_pixmap_init(
     struct dsrt_ctxt const * const p_ctxt,
-    int const i_width,
-    int const i_height)
+    unsigned int const i_width,
+    unsigned int const i_height)
 {
     char b_result;
 

@@ -93,7 +93,7 @@ dsrt_main_convert_line(
 
     signed long int i_source_y1;
 
-    signed long int i_source_height;
+    unsigned long int i_source_height;
 
     signed long int sy;
 
@@ -115,12 +115,12 @@ dsrt_main_convert_line(
 
     int i_source_x1;
 
-    int i_source_width;
+    unsigned long int i_source_width;
 
 #if defined(DSRT_FEATURE_ZOOM)
     i_source_y1 = p_zoom->y1;
 
-    i_source_height = p_zoom->y2 - p_zoom->y1;
+    i_source_height = (unsigned long int)(p_zoom->y2 - p_zoom->y1);
 #else /* #if defined(DSRT_FEATURE_ZOOM) */
     i_source_y1 = 0;
 
@@ -130,7 +130,7 @@ dsrt_main_convert_line(
 #if defined(DSRT_FEATURE_ZOOM)
     i_source_x1 = p_zoom->x1;
 
-    i_source_width = p_zoom->x2 - p_zoom->x1;
+    i_source_width = (unsigned long int)(p_zoom->x2 - p_zoom->x1);
 #else /* #if defined(DSRT_FEATURE_ZOOM) */
     i_source_x1 = 0;
 
@@ -138,7 +138,7 @@ dsrt_main_convert_line(
 #endif /* #if defined(DSRT_FEATURE_ZOOM) */
 
     /* Calculate srcy */
-    sy = (((dy * 128 + 64) * i_source_height) / p_ctxt->p_image->height);
+    sy = (((dy * 128 + 64) * (signed long int)(i_source_height)) / (signed long int)(p_ctxt->p_image->height));
 
     fy0 = ((unsigned long int)(sy) & 0x7F);
 
@@ -147,7 +147,7 @@ dsrt_main_convert_line(
 #if defined(DSRT_FEATURE_MIRROR)
     if (p_opts->b_mirror_y)
     {
-        sy = i_source_y1 + i_source_height - 1 - sy;
+        sy = i_source_y1 + (signed long int)(i_source_height) - 1 - sy;
 
         y_dir = -1;
     }
@@ -182,7 +182,7 @@ dsrt_main_convert_line(
 
     (void)(p_opts);
 
-    if ((sy1 >= 0) && (sy1 < p_jpeg->height))
+    if ((unsigned int)(sy1) < p_jpeg->height)
     {
         lb1 = p_jpeg->lineBuf[sy1];
     }
@@ -191,7 +191,7 @@ dsrt_main_convert_line(
         lb1 = NULL;
     }
 
-    if ((sy2 >= 0) && (sy2 < p_jpeg->height))
+    if ((unsigned int)(sy2) < p_jpeg->height)
     {
         lb2 = p_jpeg->lineBuf[sy2];
     }
@@ -201,7 +201,7 @@ dsrt_main_convert_line(
     }
 
     /* for all destination pixels */
-    for (dx = 0; dx < p_ctxt->p_image->width; dx++)
+    for (dx = 0; dx < (signed long int)(p_ctxt->p_image->width); dx++)
     {
         u_int32_t col;
         u_int32_t r1;
@@ -214,7 +214,7 @@ dsrt_main_convert_line(
         unsigned long int fx2;
 
         /* calculate source position */
-        signed long int sx = (((dx * 128 + 64) * i_source_width) / p_ctxt->p_image->width);
+        signed long int sx = (((dx * 128 + 64) * (signed long int)(i_source_width)) / (signed long int)(p_ctxt->p_image->width));
 
         frac = (sx & 0x7F);
 
@@ -223,7 +223,7 @@ dsrt_main_convert_line(
 #if defined(DSRT_FEATURE_MIRROR)
         if (p_opts->b_mirror_x)
         {
-            sx = i_source_x1 + i_source_width - 1 - sx;
+            sx = i_source_x1 + (signed long int)(i_source_width) - 1 - sx;
 
             x_dir = -1;
         }
@@ -262,13 +262,13 @@ dsrt_main_convert_line(
 
         b1 = 0;
 
-        if ((sx1 >= 0) && (sx1 < p_jpeg->width))
+        if ((unsigned int)(sx1) < p_jpeg->width)
         {
-            int xr = p_jpeg->xr0 + (sx1 * p_jpeg->bytesPerPix);
+            int xr = p_jpeg->xr0 + (sx1 * (int)(p_jpeg->bytesPerPix));
 
-            int xg = p_jpeg->xg0 + (sx1 * p_jpeg->bytesPerPix);
+            int xg = p_jpeg->xg0 + (sx1 * (int)(p_jpeg->bytesPerPix));
 
-            int xb = p_jpeg->xb0 + (sx1 * p_jpeg->bytesPerPix);
+            int xb = p_jpeg->xb0 + (sx1 * (int)(p_jpeg->bytesPerPix));
 
             if (lb1)
             {
@@ -289,13 +289,13 @@ dsrt_main_convert_line(
             }
         }
 
-        if ((sx2 >= 0) && (sx2 < p_jpeg->width))
+        if ((unsigned int)(sx2) < p_jpeg->width)
         {
-            int xr = p_jpeg->xr0 + (sx2 * p_jpeg->bytesPerPix);
+            int xr = p_jpeg->xr0 + (sx2 * (int)(p_jpeg->bytesPerPix));
 
-            int xg = p_jpeg->xg0 + (sx2 * p_jpeg->bytesPerPix);
+            int xg = p_jpeg->xg0 + (sx2 * (int)(p_jpeg->bytesPerPix));
 
-            int xb = p_jpeg->xb0 + (sx2 * p_jpeg->bytesPerPix);
+            int xb = p_jpeg->xb0 + (sx2 * (int)(p_jpeg->bytesPerPix));
 
             if (lb1)
             {
@@ -368,7 +368,7 @@ static
 void
 dsrt_main_write_line(
     struct dsrt_ctxt const * const p_ctxt,
-    unsigned int const y)
+    signed long int const y)
 {
     struct dsrt_display const * const p_display = p_ctxt->p_display;
 
@@ -376,9 +376,9 @@ dsrt_main_write_line(
 
     int y_offset;
 
-    x_offset = ((p_ctxt->p_pixmap->width - p_ctxt->p_image->width) / 2);
+    x_offset = (((int)(p_ctxt->p_pixmap->width) - (int)(p_ctxt->p_image->width)) / 2);
 
-    y_offset = ((p_ctxt->p_pixmap->height - p_ctxt->p_image->height) / 2);
+    y_offset = (((int)(p_ctxt->p_pixmap->height) - (int)(p_ctxt->p_image->height)) / 2);
 
     /* put */
     XPutImage(
@@ -389,9 +389,9 @@ dsrt_main_write_line(
         0,
         0,
         x_offset,
-        y_offset + y,
+        (y_offset + y),
         p_ctxt->p_image->width,
-        1);
+        1u);
 }
 
 /*
@@ -410,18 +410,18 @@ dsrt_main_scan(
 
     XSetForeground(p_ctxt->p_display->dis, p_ctxt->p_display->copyGC, BlackPixel(p_ctxt->p_display->dis, p_ctxt->p_display->screen));
 
-    XFillRectangle(p_ctxt->p_display->dis, p_ctxt->p_pixmap->pixmap, p_ctxt->p_display->copyGC, 0, 0, p_ctxt->p_pixmap->width, p_ctxt->p_pixmap->height);
+    XFillRectangle(p_ctxt->p_display->dis, p_ctxt->p_pixmap->pixmap, p_ctxt->p_display->copyGC, 0, 0, (unsigned int)(p_ctxt->p_pixmap->width), (unsigned int)(p_ctxt->p_pixmap->height));
 
-    for (dy = 0; dy < p_ctxt->p_image->height; ++dy)
+    for (dy = 0; dy < (signed long int)(p_ctxt->p_image->height); ++dy)
     {
         /* Clear the line */
         if (p_ctxt->p_display->depth > 16)
         {
-            memset(p_ctxt->p_image->img->data, 0, p_ctxt->p_image->width * 4);
+            memset(p_ctxt->p_image->img->data, 0, (size_t)(p_ctxt->p_image->width * 4));
         }
         else
         {
-            memset(p_ctxt->p_image->img->data, 0, p_ctxt->p_image->width * 2);
+            memset(p_ctxt->p_image->img->data, 0, (size_t)(p_ctxt->p_image->width * 2));
         }
 
         dsrt_main_convert_line(p_ctxt, dy);
@@ -444,10 +444,10 @@ static
 void
 dsrt_main_select_pixmap_size(
     struct dsrt_ctxt const * const p_ctxt,
-    int * const p_pixmap_width,
-    int * const p_pixmap_height,
-    int * const p_image_width,
-    int * const p_image_height)
+    unsigned int * const p_pixmap_width,
+    unsigned int * const p_pixmap_height,
+    unsigned int * const p_image_width,
+    unsigned int * const p_image_height)
 {
     struct dsrt_opts const * const p_opts = p_ctxt->p_opts;
 
@@ -457,22 +457,22 @@ dsrt_main_select_pixmap_size(
     struct dsrt_zoom const * const p_zoom = p_ctxt->p_zoom;
 #endif /* #if defined(DSRT_FEATURE_ZOOM) */
 
-    int i_pixmap_width;
+    unsigned int i_pixmap_width;
 
-    int i_pixmap_height;
+    unsigned int i_pixmap_height;
 
-    int i_image_width;
+    unsigned int i_image_width;
 
-    int i_image_height;
+    unsigned int i_image_height;
 
-    int i_source_width;
+    unsigned int i_source_width;
 
-    int i_source_height;
+    unsigned int i_source_height;
 
 #if defined(DSRT_FEATURE_ZOOM)
-    i_source_width = p_zoom->x2 - p_zoom->x1;
+    i_source_width = (unsigned int)(p_zoom->x2 - p_zoom->x1);
 
-    i_source_height = p_zoom->y2 - p_zoom->y1;
+    i_source_height = (unsigned int)(p_zoom->y2 - p_zoom->y1);
 #else /* #if defined(DSRT_FEATURE_ZOOM) */
     i_source_width = p_ctxt->p_jpeg->width;
 
@@ -542,13 +542,13 @@ dsrt_main_show_file(
 {
     char b_result;
 
-    int i_pixmap_width;
+    unsigned int i_pixmap_width;
 
-    int i_pixmap_height;
+    unsigned int i_pixmap_height;
 
-    int i_image_width;
+    unsigned int i_image_width;
 
-    int i_image_height;
+    unsigned int i_image_height;
 
 #if defined(DSRT_FEATURE_ZOOM)
     dsrt_zoom_setup(p_ctxt, p_ctxt->p_jpeg->width, p_ctxt->p_jpeg->height);

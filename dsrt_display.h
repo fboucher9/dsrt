@@ -53,11 +53,11 @@ struct dsrt_display
 
     int screen;
 
-    int depth;
+    unsigned int depth;
 
-    int width;
+    unsigned int width;
 
-    int height;
+    unsigned int height;
 
 }; /* struct dsrt_display */
 

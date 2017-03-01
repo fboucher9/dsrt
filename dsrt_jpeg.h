@@ -39,11 +39,11 @@ struct dsrt_jpeg
 
     JSAMPARRAY lineBuf;
 
-    int width;
+    unsigned int width;
 
-    int height;
+    unsigned int height;
 
-    int bytesPerPix;
+    unsigned int bytesPerPix;
 
     int xr0;
 
@@ -51,7 +51,7 @@ struct dsrt_jpeg
 
     int xb0;
 
-    int lineOffset;
+    unsigned int lineOffset;
 
 }; /* struct dsrt_jpeg */
 

@@ -29,9 +29,9 @@ struct dsrt_view
 {
     Window h;
 
-    int width;
+    unsigned int width;
 
-    int height;
+    unsigned int height;
 
 }; /* struct dsrt_view */
 

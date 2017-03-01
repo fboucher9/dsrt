@@ -64,7 +64,7 @@ dsrt_jpeg_init(
 
         p_jpeg->height = p_jpeg->cinfo.output_height;
 
-        p_jpeg->bytesPerPix = p_jpeg->cinfo.output_components;
+        p_jpeg->bytesPerPix = (unsigned int)(p_jpeg->cinfo.output_components);
 
         p_jpeg->lineOffset = (p_jpeg->width * p_jpeg->bytesPerPix);
 
@@ -73,7 +73,7 @@ dsrt_jpeg_init(
                 (j_common_ptr) &p_jpeg->cinfo,
                 JPOOL_IMAGE,
                 p_jpeg->lineOffset,
-                p_jpeg->cinfo.output_height);
+                (JDIMENSION)(p_jpeg->cinfo.output_height));
 
         if (3 == p_jpeg->bytesPerPix)
         {

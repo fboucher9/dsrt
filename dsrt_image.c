@@ -49,16 +49,16 @@ get_byte_order(void)
 char
 dsrt_image_init(
     struct dsrt_ctxt const * const p_ctxt,
-    int const i_width,
-    int const i_height)
+    unsigned int const i_width,
+    unsigned int const i_height)
 {
     char b_result;
 
     struct dsrt_image * const p_image = p_ctxt->p_image;
 
-    int const depth_bits_rounded = ((p_ctxt->p_display->depth + 15) & ~15);
+    unsigned int const depth_bits_rounded = (((p_ctxt->p_display->depth) + 15u) & ~15u);
 
-    int const depth_bytes = (depth_bits_rounded / 8);
+    unsigned int const depth_bytes = (depth_bits_rounded / 8);
 
     size_t const i_len = (depth_bytes * i_width);
 
@@ -72,10 +72,10 @@ dsrt_image_init(
             p_ctxt->p_display->depth,
             ZPixmap,
             0,
-            p_data,
+            (char *)(p_data),
             i_width,
             1,
-            depth_bits_rounded,
+            (int)(depth_bits_rounded),
             0);
 
         if (p_image->img)
